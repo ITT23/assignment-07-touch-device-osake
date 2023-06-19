@@ -3,7 +3,7 @@ import sys
 from os import path
 import uuid
 
-RECORDINGS_PATH = path.join(path.dirname(__file__), f"recordings\\cam_video{str(uuid.uuid4())}.mp4")
+RECORDINGS_PATH = path.join(path.dirname(__file__), f"cam_video{str(uuid.uuid4())}.mp4")
 
 video_id = 0
 
@@ -14,7 +14,7 @@ if len(sys.argv) > 1:
 cap = cv2.VideoCapture(video_id)
 
 vid_cod = cv2.VideoWriter_fourcc(*'XVID')
-output = cv2.VideoWriter(RECORDINGS_PATH, vid_cod, 20.0, (640,480))
+output = cv2.VideoWriter(f"cam_video{str(uuid.uuid4())}.mp4", vid_cod, 20.0, (640,480))
 
 while True:
     # Capture a frame from the webcam
