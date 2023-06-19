@@ -5,7 +5,7 @@ import uuid
 
 RECORDINGS_PATH = path.join(path.dirname(__file__), f"cam_video{str(uuid.uuid4())}.mp4")
 
-video_id = 0
+video_id = 1
 
 if len(sys.argv) > 1:
     video_id = int(sys.argv[1])
