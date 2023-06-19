@@ -1,8 +1,9 @@
 import cv2
 import sys
 from os import path
+import uuid
 
-RECORDINGS_PATH = path.join(path.dirname(__file__), "recordings\\cam_video.mp4")
+RECORDINGS_PATH = path.join(path.dirname(__file__), f"recordings\\cam_video{str(uuid.uuid4())}.mp4")
 
 video_id = 0
 
