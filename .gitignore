@@ -1,2 +1,5 @@
-.venv/
+.venv
 .recordings/
+.vscode
+__pycache__
+.DS_Store
