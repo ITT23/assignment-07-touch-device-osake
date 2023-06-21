@@ -1,3 +1,15 @@
+'''
+ToDo:
+- nahebeieinanderliegende areas gruppieren 
+- Kalibrierung ausprobieren
+  -> Cutoff nachjustieren bis Wert erziehlt wird 
+  -> Zu Beginn soll der Kalibrierungsprozess stattfinden (user soll darüber informiert werden)
+            -> für cutoff und Lichtverhältnisse
+            -> Zwischen light und strong Touch (eventuell über die Größe der Area)
+
+
+'''
+
 import cv2
 import sys
 from os import path
