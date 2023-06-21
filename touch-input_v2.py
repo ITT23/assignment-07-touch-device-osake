@@ -23,7 +23,7 @@ if len(sys.argv) > 1:
     video_id = int(sys.argv[1])
 
 # Create a video capture object for the webcam
-cap = cv2.VideoCapture(RECORDED_SESSION_1)
+cap = cv2.VideoCapture(RECORDED_SESSION_2)
 
 while True:
     # Capture a frame from the webcam
@@ -33,8 +33,7 @@ while True:
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     cutoff = 25
-    img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(img_gray, cutoff, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(gray, cutoff, 255, cv2.THRESH_BINARY)
 
     # Display the frame
     cv2.imshow('frame', thresh)
