@@ -19,7 +19,7 @@ import time
 CURR_DIR = path.dirname(__file__)
 #RECORDINGS_PATH = path.join(CURR_DIR, f"assets/{str(uuid.uuid4())}.mp4")
 RECORDED_SESSION_1 = path.join(CURR_DIR, f"assets/cam_video8e2858e0-65a4-4817-bfd6-8034fa781daf.mp4")
-RECORDED_SESSION_2 = path.join(CURR_DIR, f"assets/cam_video691bf41f-b9eb-499b-8d32-723a44a10453.mp4")
+RECORDED_SESSION_2 = path.join(CURR_DIR, f"assets/touch_stärker_2.mp4")
 
 # needed for the actual case
 #video_id = 0
@@ -89,7 +89,7 @@ while True:
     #ret, thresh = cv2.threshold(gray, cutoff, 255, cv2.THRESH_BINARY)
 
     # Display the frame
-    cv2.imshow('frame', thresh_img)
+    cv2.imshow('frame', frame)
 
     # Wait for a key press and check if it's the 'q' key
     if cv2.waitKey(1) & 0xFF == ord('q'):
