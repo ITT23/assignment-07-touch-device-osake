@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
-import os, time, platform
-from typing import Union
+import os, time, platform, enum
+from typing import Union, Callable
 
 from pyglet import app, window
 from pyglet.shapes import Circle
@@ -21,6 +21,12 @@ class Font:
   TEXT_X = 50
   TEXT_Y = 50
   TEXT_SIZE = 15
+
+
+class TouchState(enum):
+  TOUCH = 0
+  HOVER = 1
+  RELEASE = 2
 
 
 class Launcher:
@@ -58,28 +64,49 @@ class Launcher:
       os.system(f"Start-Process '{app_path}'")
       #eventually "start <app.exe>" works?
 
-class Input:
+class TouchscreenInput:
   #events: press, release, drag, hover
   #(x and y coordinates should be normalized to a value between 0 and 1 with (0, 0) being the top left screen corner)
+  #combine get_value and registercallback; track times of callbacks; check in get_value when last update was; trigger release;
   '''
     {'type': 'touch', 'x': float, 'y': float}
     {'type': 'hover', 'x': float, 'y': float}
-    {'type': 'release', 'x': float, 'y': float}
 
-      {'events' :
-    {0 : {'type' : 'touch/hover',
-    'x' : float,
-    'y' : float},
-    1 : {'type' : 'touch/hover',
-    'x' : float,
-    'y' : float},
-    ...}
+    event_name: touch_screen
+    define update rate!!!
   '''
-  #T_Input_State = TypedDict('InputState', { 'acc_x': float, 'button_1': bool, 'button_2': bool })
+  TOUCH_SCREEN_EVENT_NAME = 'touch_screen'
+  TOUCH_RELEASE_THRESHOLD = 100 #ms
 
   def __init__(self, port: int) -> None:
     self._sensor = SensorUDP(port)
+    self.callbacks = {}
 
+    self._sensor.register_callback(self.TOUCH_SCREEN_EVENT_NAME, self._cb_touch)
+    self._last_update = time.time()
+    self._touch_status = TouchState.RELEASE
+
+  def _cb_touch(self, data: dict) -> None:
+    if data["event"] == "touch" and self._touch_status == TouchState.TOUCH:
+      self.callbacks["drag"](data["x"], data["y"])
+    
+    elif data["event"] == "touch":
+      self.callbacks["on_touch_press"]()
+      self._touch_status = TouchState.TOUCH
+    
+    elif data["event"] == "hover":
+      self.callbacks["on_touch_hover"](data["x"], data["y"])
+      self._touch_status = TouchState.HOVER
+
+    self._last_update = time.time()
+    
+  def check_update(self) -> None:
+    if time.time() - self._last_update > self.TOUCH_RELEASE_THRESHOLD:
+      self.callbacks["on_touch_release"]()
+      self._touch_status = TouchState.RELEASE
+
+  def register_callback(self, key: str, cb: Callable) -> None:
+    self.callbacks[key] = cb
 
 class Mapping:
 
@@ -89,8 +116,6 @@ class Mapping:
 
 
 class Application:
-
-  INPUT_DEVICES = ['mouse', 'touch']
 
   FPS = 1 / 60
   WIDTH = 1280
@@ -106,14 +131,26 @@ class Application:
   CIRCLE_COLOUR_START = (0,0,255,255)
   CIRCLE_RADIUS_START = 8
 
+  DEFAULT_HOVER_POSITION = (-5, -5)
+  HOVER_RADIUS = 5
+  HOVER_COLOUR = (0,255,0,255)
+
   def __init__(self, dippid_port: int) -> None:
     self.window = window.Window(self.WIDTH, self.HEIGTH, caption=self.NAME)
     self.on_draw = self.window.event(self.on_draw)
     self.on_key_press = self.window.event(self.on_key_press)
 
+    #mouse events
     self.on_mouse_drag = self.window.event(self.on_mouse_drag)
     self.on_mouse_release = self.window.event(self.on_mouse_release)
     self.on_mouse_press = self.window.event(self.on_mouse_press)
+
+    #touch screen events
+    self.t_input = TouchscreenInput(dippid_port)
+    self.t_input.register_callback("on_touch_drag", self.on_mouse_drag) #would name it otherwise, but on_mouse_drag is given by pyglet and we dont wanna double implement the same function for touch_screen
+    self.t_input.register_callback("on_touch_release", self.on_mouse_release)
+    self.t_input.register_callback("on_touch_press", self.on_mouse_press)
+    self.t_input.register_callback("on_touch_hover", self.on_touch_hover)
 
     self.recogniser = Recogniser()
     self.recogniser.load_templates(self.TEMPLATE_PATH)
@@ -121,10 +158,11 @@ class Application:
     
     self.mappings = self._load_mappings()
     self.launcher = Launcher()
-    self.input = Input(dippid_port)
 
     self.shapes: list[Circle] = []
     self.points: list[Point] = []
+    
+    self.hover_circle = Circle(x=self.DEFAULT_HOVER_POSITION[0], y=self.DEFAULT_HOVER_POSITION[1], radius=self.HOVER_RADIUS, color=self.HOVER_COLOUR)
 
     self.label = Label(text=Font.INFO, font_name=Font.NAME, font_size=Font.TEXT_SIZE, bold=True, color=Font.COLOUR, x=Font.TEXT_X, y=Font.TEXT_Y)
     self.label.text = self.label.text + ', '.join(self._template_names)
@@ -161,8 +199,12 @@ class Application:
   def on_draw(self) -> None:
     self.window.clear()
 
+    self.t_input.check_update()
+
     for point in self.shapes:
       point.draw()
+
+    self.hover_circle.draw()
     self.label.draw()
 
     time.sleep(self.FPS)
@@ -177,6 +219,9 @@ class Application:
 
     self.shapes.append(shape)
     self.points.append(Point(x,y))
+
+    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
+    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
 
   def on_mouse_release(self, *_) -> None:
     t1 = time.time()
@@ -197,16 +242,29 @@ class Application:
     t_delta = round((time.time() - t1) * 1000)
 
     self.label.text = f"Result: {template.name} ({accuracy}) in {t_delta}ms."
+
+    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
+    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
     
   def on_mouse_press(self, *_) -> None:
     self.shapes = []
     self.points = []
 
+    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
+    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
+  
+  def on_touch_hover(self, x: int, y: int, *_) -> None:
+    self.hover_circle.x = x
+    self.hover_circle.y = y
+
   def on_key_press(self, symbol: int, _) -> None:
     if symbol == key.ESCAPE:
       app.exit()
 
+    elif symbol == key.Q:
+      self.on_mouse_press()
 
+  
 if __name__ == "__main__":
   parser = ArgumentParser(prog=f"{Application.NAME}", description="todo")
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
