@@ -6,6 +6,7 @@ ToDo:
   -> Zu Beginn soll der Kalibrierungsprozess stattfinden (user soll darüber informiert werden)
             -> für cutoff und Lichtverhältnisse
             -> Zwischen light und strong Touch (eventuell über die Größe der Area)
+- Flickern reduzieren (letzte Zustände speichern)
 
 
 '''
@@ -15,6 +16,7 @@ import sys
 from os import path
 import uuid
 import time
+import numpy as np
 
 # webcam id
 video_id = 1
@@ -26,6 +28,51 @@ if len(sys.argv) > 1:
 cap = cv2.VideoCapture(video_id)
 
 cutoff = 25
+
+# Agglomerative Clustering
+# https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
+def calculate_contour_distance(contour1, contour2): 
+    x1, y1, w1, h1 = cv2.boundingRect(contour1)
+    c_x1 = x1 + w1/2
+    c_y1 = y1 + h1/2
+
+    x2, y2, w2, h2 = cv2.boundingRect(contour2)
+    c_x2 = x2 + w2/2
+    c_y2 = y2 + h2/2
+
+    return max(abs(c_x1 - c_x2) - (w1 + w2)/2, abs(c_y1 - c_y2) - (h1 + h2)/2)
+
+# Agglomerative Clustering
+# https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
+def merge_contours(contour1, contour2):
+    return np.concatenate((contour1, contour2), axis=0)
+
+# Agglomerative Clustering
+# https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
+def agglomerative_cluster(contours, threshold_distance=40.0):
+    current_contours = contours
+    while len(current_contours) > 1:
+        min_distance = None
+        min_coordinate = None
+
+        for x in range(len(current_contours)-1):
+            for y in range(x+1, len(current_contours)):
+                distance = calculate_contour_distance(current_contours[x], current_contours[y])
+                if min_distance is None:
+                    min_distance = distance
+                    min_coordinate = (x, y)
+                elif distance < min_distance:
+                    min_distance = distance
+                    min_coordinate = (x, y)
+
+        if min_distance < threshold_distance:
+            index1, index2 = min_coordinate
+            current_contours[index1] = merge_contours(current_contours[index1], current_contours[index2])
+            del current_contours[index2]
+        else: 
+            break
+
+    return current_contours
 
 
 def touch_areas(img_raw):
@@ -47,17 +94,28 @@ def touch_areas(img_raw):
     for contour in contours:
         area = cv2.contourArea(contour)
         if area >= 10 and area <= 50:
-            (x,y),radius = cv2.minEnclosingCircle(contour)
-            center = (int(x),int(y))
-            radius = int(radius) * 3
-            cv2.circle(img_gray,center,radius,(0,255,0),3)
+            #(x,y),radius = cv2.minEnclosingCircle(contour)
+            #center = (int(x),int(y))
+            #radius = int(radius) * 3
+            #cv2.circle(img_gray,center,radius,(0,255,0),3)
             touch_areas_contours.append(contour)
-    
-    if len(touch_areas_contours) > 0:
-        print(len(touch_areas_contours))
+            
+    area_contours_clustered = agglomerative_cluster(touch_areas_contours)
+        
+    final_areas:list = []
     
     #img_contours = cv2.cvtColor(img_gray, cv2.COLOR_BGR2RGB)
-    img_areas = cv2.drawContours(img_gray, touch_areas_contours, -1, (255, 160, 122), 3)
+    #img_areas = cv2.drawContours(img_gray, area_contours_clustered, -1, (255, 160, 122), 3)
+    for contour in area_contours_clustered:
+        area = cv2.contourArea(contour)
+        
+        (x,y),radius = cv2.minEnclosingCircle(contour)
+        center = (int(x),int(y))
+        radius = int(radius) * 2
+        cv2.circle(img_gray,center,radius,(0,255,0),3)
+        final_areas.append(contour)
+        print(len(final_areas))
+    img_areas = cv2.drawContours(img_gray, final_areas, -1, (255, 160, 122), 3)
 
     return img_areas
 
@@ -75,7 +133,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    time.sleep(0.05)
+    #time.sleep(0.05)
 
 # Release the video capture object and close all windows
 cap.release()
