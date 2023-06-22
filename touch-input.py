@@ -30,6 +30,8 @@ if len(sys.argv) > 1:
 cap = cv2.VideoCapture(video_id)
 
 cutoff = 25
+radius_touch = 40
+radus_hover = 60
 
 # dominant fingertip memory
 dom_fing_dq:list = deque(maxlen=1)
@@ -83,7 +85,7 @@ def agglomerative_cluster(contours, threshold_distance=40.0):
 
 
 def touch_areas(img_raw):
-    global cutoff, dom_fing_dq, curr_dom_touch
+    global cutoff, dom_fing_dq, curr_dom_touch, radius_touch
     
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(img_raw, cv2.COLOR_BGR2GRAY)
@@ -141,7 +143,7 @@ def touch_areas(img_raw):
         if len(curr_dom_touch) == 0:
             curr_dom_touch.append(area_contours_clustered[0])
         x_old, y_old = dom_fing_dq[0]
-        if x_old - 30 < x and x_old + 30 > x and y_old - 30 < y and y_old + 30 > y:
+        if x_old - 50 < x and x_old + 50 > x and y_old - 50 < y and y_old + 50 > y:
             print('old position')
             area_contours_clustered[0] = curr_dom_touch[0]
             print(curr_dom_touch)
@@ -156,7 +158,7 @@ def touch_areas(img_raw):
         
         (x,y),radius = cv2.minEnclosingCircle(contour)
         center = (int(x),int(y))
-        radius = int(radius) * 2
+        radius = radius_touch
         cv2.circle(img_bgr,center,radius,(0,255,0),3)
         final_areas.append(contour)
     
@@ -180,7 +182,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    time.sleep(0.05)
+    #time.sleep(0.05)
 
 # Release the video capture object and close all windows
 cap.release()
