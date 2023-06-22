@@ -18,6 +18,8 @@ import uuid
 import time
 import numpy as np
 
+from collections import deque
+
 # webcam id
 video_id = 1
 
@@ -28,6 +30,11 @@ if len(sys.argv) > 1:
 cap = cv2.VideoCapture(video_id)
 
 cutoff = 25
+
+# dominant fingertip memory
+dom_fing_dq:list = deque(maxlen=1)
+# current dominant fingertip touch
+curr_dom_touch:list = deque(maxlen=1)
 
 # Agglomerative Clustering
 # https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
@@ -76,7 +83,7 @@ def agglomerative_cluster(contours, threshold_distance=40.0):
 
 
 def touch_areas(img_raw):
-    global cutoff, threshold_area
+    global cutoff, dom_fing_dq, curr_dom_touch
     
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(img_raw, cv2.COLOR_BGR2GRAY)
@@ -106,6 +113,44 @@ def touch_areas(img_raw):
     
     #img_contours = cv2.cvtColor(img_gray, cv2.COLOR_BGR2RGB)
     #img_areas = cv2.drawContours(img_gray, area_contours_clustered, -1, (255, 160, 122), 3)
+    
+    
+    
+        #print(dom_fing_dq[0])
+    '''
+    if len(final_areas) > 0:
+        (x,y),radius = cv2.minEnclosingCircle(final_areas[0])
+        print((x,y))
+        if (int(x), int(y)) in dom_fing_dq:
+            print('old position')
+            final_areas[0] = curr_dom_touch
+        else:
+            dom_fing_dq.append((int(x),int(y)))
+            curr_dom_touch = final_areas[0]
+            #print(dom_fing_dq)
+            print('new')
+    '''
+    
+    # Flackern reduzieren
+    # old or new position
+    if len(area_contours_clustered) > 0:
+        (x,y),radius = cv2.minEnclosingCircle(area_contours_clustered[0])
+        print((x,y))
+        if len(dom_fing_dq) == 0:
+            dom_fing_dq.append((x,y))
+        if len(curr_dom_touch) == 0:
+            curr_dom_touch.append(area_contours_clustered[0])
+        x_old, y_old = dom_fing_dq[0]
+        if x_old - 30 < x and x_old + 30 > x and y_old - 30 < y and y_old + 30 > y:
+            print('old position')
+            area_contours_clustered[0] = curr_dom_touch[0]
+            print(curr_dom_touch)
+        else:
+            dom_fing_dq.append((x,y))
+            curr_dom_touch.append(area_contours_clustered[0])
+            #print(dom_fing_dq)
+            print('new')
+            
     for contour in area_contours_clustered:
         area = cv2.contourArea(contour)
         
@@ -114,7 +159,9 @@ def touch_areas(img_raw):
         radius = int(radius) * 2
         cv2.circle(img_bgr,center,radius,(0,255,0),3)
         final_areas.append(contour)
-        print(len(final_areas))
+    
+    
+        #print(len(final_areas))
     img_areas = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
 
     return img_areas
@@ -133,7 +180,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    #time.sleep(0.05)
+    time.sleep(0.05)
 
 # Release the video capture object and close all windows
 cap.release()
