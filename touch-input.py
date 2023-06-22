@@ -27,8 +27,9 @@ cap = cv2.VideoCapture(video_id)
 
 cutoff = 25
 
+
 def touch_areas(img_raw):
-    global cutoff
+    global cutoff, threshold_area
     
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(img_raw, cv2.COLOR_BGR2GRAY)
@@ -56,9 +57,9 @@ def touch_areas(img_raw):
         print(len(touch_areas_contours))
     
     #img_contours = cv2.cvtColor(img_gray, cv2.COLOR_BGR2RGB)
-    img_contours = cv2.drawContours(img_gray, touch_areas_contours, -1, (255, 160, 122), 3)
+    img_areas = cv2.drawContours(img_gray, touch_areas_contours, -1, (255, 160, 122), 3)
 
-    return img_contours
+    return img_areas
 
 while True:
     # Capture a frame from the webcam
