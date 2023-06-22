@@ -86,7 +86,7 @@ def touch_areas(img_raw):
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # convert back to colored img to see the touch areas
-    img_gray = cv2.cvtColor(img_gray, cv2.COLOR_BAYER_BG2BGR)
+    img_bgr = cv2.cvtColor(img_gray, cv2.COLOR_BAYER_BG2BGR)
 
     # contours of the touched areas
     touch_areas_contours:list = []
@@ -112,10 +112,10 @@ def touch_areas(img_raw):
         (x,y),radius = cv2.minEnclosingCircle(contour)
         center = (int(x),int(y))
         radius = int(radius) * 2
-        cv2.circle(img_gray,center,radius,(0,255,0),3)
+        cv2.circle(img_bgr,center,radius,(0,255,0),3)
         final_areas.append(contour)
         print(len(final_areas))
-    img_areas = cv2.drawContours(img_gray, final_areas, -1, (255, 160, 122), 3)
+    img_areas = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
 
     return img_areas
 
