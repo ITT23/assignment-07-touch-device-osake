@@ -14,16 +14,23 @@ ToDo:
 import cv2
 from os import path
 import time
+import pyglet
 
 from collections import deque
+from PIL import Image
+from pyglet import shapes
 
 # own helper classes
-from helper_classes.agglomerative_clustering import Agglomerative_Cluster_Model
+from helper_classes.agglomerative_clustering_class import Agglomerative_Cluster_Model
 
 CURR_DIR = path.dirname(__file__)
 #RECORDINGS_PATH = path.join(CURR_DIR, f"assets/{str(uuid.uuid4())}.mp4")
 #RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_stärker_2.mp4") # Touch
 RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_hover_leichter_2.mp4") # Hover
+
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
+window = pyglet.window.Window(WINDOW_WIDTH, WINDOW_HEIGHT, resizable=False)
 
 # area treshholds for touch/hover detection
 area_lower_limit = 0
@@ -42,6 +49,37 @@ dom_fing_dq:list = deque(maxlen=1)
 curr_dom_touch:list = deque(maxlen=1)
 
 aggl_clusterer = Agglomerative_Cluster_Model()
+
+class Game:
+    def __init__(self):
+        self.image_handler = ImageHandler(0)
+        self.enemies = []
+
+    def draw(self):
+        self.image_handler.get_image()
+        img = self.image_handler.get_pyglet_image()
+        if img is not None:
+            img.blit(0,0,0)
+
+## https://gist.github.com/nkymut/1cb40ea6ae4de0cf9ded7332f1ca0d55
+def cv2glet(img,fmt):
+    '''Assumes image is in BGR color space. Returns a pyimg object'''
+    if fmt == 'GRAY':
+      rows, cols = img.shape
+      channels = 1
+    else:
+      rows, cols, channels = img.shape
+
+    raw_img = Image.fromarray(img).tobytes()
+
+    top_to_bottom_flag = -1
+    bytes_per_row = channels*cols
+    pyimg = pyglet.image.ImageData(width=cols, 
+                                   height=rows, 
+                                   fmt=fmt, 
+                                   data=raw_img, 
+                                   pitch=top_to_bottom_flag*bytes_per_row)
+    return pyimg
 
 
 def touch_areas(img_raw):
