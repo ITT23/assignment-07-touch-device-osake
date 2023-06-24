@@ -4,7 +4,7 @@ from os import path
 import uuid
 
 CURR_DIR = path.dirname(__file__)
-RECORDINGS_PATH = path.join(CURR_DIR, f"assets/{str(uuid.uuid4())}.mp4")
+RECORDINGS_PATH = path.join(CURR_DIR, f"assets/touch_stärker_2.mp4")
 
 video_id = 1
 
