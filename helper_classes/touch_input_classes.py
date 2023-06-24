@@ -1,5 +1,6 @@
 import cv2
 import pyglet
+import socket
 
 from PIL import Image
 from pyglet import shapes
@@ -45,6 +46,8 @@ def cv2glet(img,fmt):
 class Image_Processor:
     def __init__(self, camera_id):
         self.cap = cv2.VideoCapture(camera_id)
+        self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame = None
         self.thresh = None
         self.is_touch = False
@@ -53,12 +56,24 @@ class Image_Processor:
         self.cutoff_hover = 25
         self.aggl_clusterer = Agglomerative_Cluster_Model()
         # dominant fingertip memory
-        self.last_fing_tip_coordinates:list = []
+        self.last_fing_tip_coordinates:list(tuple) = []
         # current dominant fingertip touch
         self.curr_dom_touch:list = []
 
     def cap_release(self):
         self.cap.release()
+
+    def get_cap_width(self):
+        return self.width
+    
+    def get_cap_height(self):
+        return self.height
+
+    def get_is_touched(self):
+        return self.is_touch
+    
+    def get_is_hovered(self):
+        return self.is_hover
 
     def get_cutoff_touch(self):
         return self.cutoff_touch
@@ -71,6 +86,9 @@ class Image_Processor:
 
     def set_hover_cutoff(self, new_cutoff):
         self.cutoff_hover = new_cutoff
+
+    def get_input_points(self):
+        return self.last_fing_tip_coordinates
 
     def process_image(self):
 
@@ -149,8 +167,6 @@ class Image_Processor:
             filtered_arr_cluster.append(area_contours_clustered[1])
             area_contours_clustered = filtered_arr_cluster
             
-       
-        
         # Flackern reduzieren
         # old or new position
         if len(area_contours_clustered) > 0:
@@ -169,3 +185,52 @@ class Image_Processor:
                     self.curr_dom_touch[0] = area_contours_clustered[0]
 
         return area_contours_clustered
+    
+class DIPPID_Sender():
+
+    def __init__(self, image_processor:Image_Processor):
+        self.image_handler = image_processor
+        self.id:str = ""
+        self.port:int = 0
+        self.sock:socket = None
+
+    def set_socket(self):
+        print("Please enter ID: ")
+        self.id = str(input())
+        print("Please enter Port Number: ")
+        self.port = int(input())
+        self.message:str = ""
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def get_events_message(self):
+        if len(self.image_handler.get_input_points()) == 1:
+            input_coordinates:list(tuple) = self.image_handler.get_input_points()
+            x, y = input_coordinates[0]
+            if self.image_handler.get_is_touched():
+                self.message = "{'events' : {0 : {'type' : 'touch', 'x' : "  + \
+                    str(x / self.image_handler.get_cap_width()) + ", 'y' : "  + \
+                        str(y / self.image_handler.get_cap_height) + "}" + "}"
+            else:
+                self.message = "{'events' : {0 : {'type' : 'hover', 'x' : "  + \
+                    str(x / self.image_handler.get_cap_width()) + ", 'y' : "  + \
+                        str(y / self.image_handler.get_cap_height) + "}" + "}"
+        else:
+            input_coordinates:list(tuple) = self.image_handler.get_input_points()
+            x_1, y_1 = input_coordinates[0]
+            x_2, y_2 = input_coordinates[1]
+            if self.image_handler.get_is_touched():
+                self.message = "{'events' : {0 : {'type' : 'touch', 'x' : "  + \
+                    str(x_1 / self.image_handler.get_cap_width()) + ", 'y' : "  + \
+                        str(y_1 / self.image_handler.get_cap_height()) + "}, 1 : {'type' : 'touch', 'x' : "  + \
+                            str(x_2 / self.image_handler.get_cap_width()) + ", 'y' : "  + \
+                                str(y_2 / self.image_handler.get_cap_height()) + "}"
+            else:
+                self.message = "{'events' : {0 : {'type' : 'hover', 'x' : "  + \
+                    str(x_1 / self.image_handler.get_cap_width()) + ",  'y' : "  + \
+                        str(y_1 / self.image_handler.get_cap_height()) + "}, 1 : {'type' : 'hover', 'x' : "  + \
+                            str(x_2 / self.image_handler.get_cap_width()) + ", 'y' : "  + \
+                                str(y_2 / self.image_handler.get_cap_height()) + "}"
+                
+        #self.sock.sendto(self.message.encode(), (self.id, self.port))
+        print(self.message)
+
