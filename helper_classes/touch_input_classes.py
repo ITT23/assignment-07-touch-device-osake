@@ -53,9 +53,9 @@ class Image_Processor:
         self.cutoff_hover = 25
         self.aggl_clusterer = Agglomerative_Cluster_Model()
         # dominant fingertip memory
-        self.last_fing_tip_coordinates:list = [None, None]
+        self.last_fing_tip_coordinates:list = []
         # current dominant fingertip touch
-        self.curr_dom_touch:list = [None]
+        self.curr_dom_touch:list = []
 
     def cap_release(self):
         self.cap.release()
@@ -134,13 +134,14 @@ class Image_Processor:
         # Flackern reduzieren
         # old or new position
         if len(area_contours_clustered) > 0:
-            if self.curr_dom_touch[0] == None:
-                self.curr_dom_touch[0] = area_contours_clustered[0]
-            #self.set_touch_state(touch_variant, True)
+            if not self.curr_dom_touch:
+                self.curr_dom_touch.append(area_contours_clustered[0])
+            self.set_touch_state(touch_variant, True)
             for i in range(len(area_contours_clustered)):
                 (x,y),radius = cv2.minEnclosingCircle(area_contours_clustered[i])
-                if self.last_fing_tip_coordinates[i] == None:
-                    self.last_fing_tip_coordinates[i] = (x,y)
+                if not self.last_fing_tip_coordinates:
+                    self.last_fing_tip_coordinates.append((x,y))
+                    self.last_fing_tip_coordinates.append((x,y))
                 x_old, y_old = self.last_fing_tip_coordinates[i]
                 if x_old - DEVIATION < x and x_old + DEVIATION > x and y_old - DEVIATION < y and y_old + DEVIATION > y:
                     area_contours_clustered[0] = self.curr_dom_touch[0]
