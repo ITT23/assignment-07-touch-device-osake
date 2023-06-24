@@ -5,8 +5,6 @@ import socket
 from PIL import Image
 from pyglet import shapes
 
-#from collections import deque
-
 # own helper classes
 from helper_classes.agglomerative_clustering_class import Agglomerative_Cluster_Model
 
@@ -22,7 +20,7 @@ AREA_UPPER_LIMIT = 50
 # deviation acceptance for new input
 DEVIATION = 50
 
-
+# convert cv2 image format to pyglet image format
 ## https://gist.github.com/nkymut/1cb40ea6ae4de0cf9ded7332f1ca0d55
 def cv2glet(img,fmt):
     '''Assumes image is in BGR color space. Returns a pyimg object'''
@@ -50,15 +48,20 @@ class Image_Processor:
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame = None
         self.thresh = None
+        # is input a touch or hover
         self.is_touch = False
         self.is_hover = False
+        # cutoffs for touch and hover
         self.cutoff_touch = 15
         self.cutoff_hover = 25
+        # used to cluster contour points in order to get the inputs
         self.aggl_clusterer = Agglomerative_Cluster_Model()
-        # dominant fingertip memory
+        # last coordinates for the input points
         self.last_fing_tip_coordinates:list(tuple) = []
         # current dominant fingertip touch
         self.curr_dom_touch:list = []
+        # amount of input points 
+        self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2
 
     def cap_release(self):
         self.cap.release()
@@ -89,7 +92,12 @@ class Image_Processor:
 
     def get_input_points(self):
         return self.last_fing_tip_coordinates
+    
+    def get_number_of_input_points(self):
+        return self.points_number
 
+    # processes image whether it is touch or hover
+    # returned image is cv2 format
     def process_image(self):
 
         # Capture a frame from the webcam
@@ -98,12 +106,14 @@ class Image_Processor:
         # convert the frame to grayscale img for threshold filter and getting the contours of them
         img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
+        # analyse thresh of image regarding touch and hover
         ret_touch, thresh_touch = cv2.threshold(img_gray, self.cutoff_touch, 255, cv2.THRESH_BINARY)
         ret_hover, thresh_hover = cv2.threshold(img_gray, self.cutoff_hover, 255, cv2.THRESH_BINARY)
-        
+        # get contours for hover and touch (if available)
         contours_touch, hierarchy_touch = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours_hover, hierarchy_hover = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         
+        # check if it was a touch or hover and adjust corresponding values
         self.set_input_status(contours_touch, contours_hover)
         if self.is_touch:
             bounding_circle_radius = RADIUS_TOUCH
@@ -119,9 +129,8 @@ class Image_Processor:
 
         final_areas:list = []
       
+        # draw the bounding circles into the image
         for contour in area_contours_clustered:
-            #area = cv2.contourArea(contour)
-            
             (x,y),radius = cv2.minEnclosingCircle(contour)
             center = (int(x),int(y))
             radius = bounding_circle_radius
@@ -132,12 +141,14 @@ class Image_Processor:
 
         return img_bgr
     
+    # convert cv2 image to pyglet image
     def get_pyglet_image(self):
         img = None
         if self.frame is not None:
             img = cv2glet(self.frame, 'BGR')
         return img 
     
+    # check on the basis of the contours for touch and hover if the input is hovering or touching
     def set_input_status(self, contours_touch:list, contours_hover:list):
         if len(contours_touch) > 1:
             self.is_touch = True
@@ -150,6 +161,7 @@ class Image_Processor:
                 self.is_touch = False
                 self.is_hover = False
 
+    # agglomerative clustering of the contour points
     def get_clustered_points(self, contours:list):
         # contours of the touched areas
         touch_areas_contours:list = []
@@ -183,6 +195,8 @@ class Image_Processor:
                 else:
                     self.last_fing_tip_coordinates[i] = (x,y)
                     self.curr_dom_touch[0] = area_contours_clustered[0]
+        
+        self.points_number = len(area_contours_clustered)
 
         return area_contours_clustered
     
@@ -202,18 +216,18 @@ class DIPPID_Sender():
         self.message:str = ""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def get_events_message(self):
-        if len(self.image_handler.get_input_points()) == 1:
+    def send_events_message(self):
+        if self.image_handler.get_number_of_input_points() == 1:
             input_coordinates:list(tuple) = self.image_handler.get_input_points()
             x, y = input_coordinates[0]
             if self.image_handler.get_is_touched():
                 self.message = "{'events' : {0 : {'type' : 'touch', 'x' : "  + \
                     str(x / self.image_handler.get_cap_width()) + ", 'y' : "  + \
-                        str(y / self.image_handler.get_cap_height) + "}" + "}"
+                        str(y / self.image_handler.get_cap_height()) + "}" + "}"
             else:
                 self.message = "{'events' : {0 : {'type' : 'hover', 'x' : "  + \
                     str(x / self.image_handler.get_cap_width()) + ", 'y' : "  + \
-                        str(y / self.image_handler.get_cap_height) + "}" + "}"
+                        str(y / self.image_handler.get_cap_height()) + "}" + "}"
         else:
             input_coordinates:list(tuple) = self.image_handler.get_input_points()
             x_1, y_1 = input_coordinates[0]
@@ -231,6 +245,6 @@ class DIPPID_Sender():
                             str(x_2 / self.image_handler.get_cap_width()) + ", 'y' : "  + \
                                 str(y_2 / self.image_handler.get_cap_height()) + "}"
                 
-        #self.sock.sendto(self.message.encode(), (self.id, self.port))
+        #self.sock.sendto(self.message.encode(), (self.id, self.port))                                                                   # auskommentiert zum Testen
         print(self.message)
 
