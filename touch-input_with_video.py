@@ -28,7 +28,7 @@ CURR_DIR = path.dirname(__file__)
 #RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_stärker_2.mp4") # Touch
 RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_hover_leichter_2.mp4") # Hover
 
-calibration_proc = False # normally true, but since calibration process is yet not integreted its False for testing purposes
+calibration_proc = True # normally true, but since calibration process is yet not integreted its False for testing purposes
 
 image_processor = Image_Processor(RECORDED_SESSION)
 dippid_sender = DIPPID_Sender(image_processor)
@@ -45,12 +45,12 @@ while True:
     # Delete it after calibration process is integrated
     # for the calibration process pyglet is used and this line is not necessary anymore because after calibration we dont show this window
     # just for testing purposes
-    if not calibration_proc:                                                                                                                        # DELETE AFTER IMPL of calibration
+    if calibration_proc:                                                                                                                        # DELETE AFTER IMPL of calibration
         cv2.imshow('frame', processed_img)
 
     # Wait for a key press and check if it's the 'q' key
     # just for testing purposes, but later it could init a new calibration process
-    elif cv2.waitKey(1) & 0xFF == ord('q'):                                                                                                         # DELETE AFTER IMPL of calibration
+    if cv2.waitKey(1) & 0xFF == ord('q'):                                                                                                         # DELETE AFTER IMPL of calibration
         break
 
     #time.sleep(0.05)
