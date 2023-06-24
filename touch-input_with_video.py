@@ -30,32 +30,30 @@ CURR_DIR = path.dirname(__file__)
 #RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_stärker_2.mp4") # Touch
 RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_hover_leichter_2.mp4") # Hover
 
+calibration_proc = True
+
 image_processor = Image_Processor(RECORDED_SESSION)
 
 
 while True:
     # check if touch happened
-    processed_img_touch = image_processor.process_image('touch')
-    # check if hover happened
-    processed_img_hover = image_processor.process_image('hover')
-
-    if image_processor.get_touch_state():
-        cv2.imshow('frame', processed_img_touch)
-        print("touch")
-    else:
-        if image_processor.get_hover_state():
-            cv2.imshow('frame', processed_img_hover)
-            print("hover")
-        else:
-            cv2.imshow('frame', processed_img_hover)
-            print("none")
+    processed_img = image_processor.process_image()
+    
+    if calibration_proc:
+        cv2.imshow('frame', processed_img)
 
     # Wait for a key press and check if it's the 'q' key
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('c'):
+        if calibration_proc:
+            calibration_proc = True
+        else:
+            calibration_proc = False
+    elif cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-    time.sleep(0.05)
+    #time.sleep(0.05)
 
 # Release the video capture object and close all windows
 image_processor.cap_release()
 cv2.destroyAllWindows()
+print('connection lost')

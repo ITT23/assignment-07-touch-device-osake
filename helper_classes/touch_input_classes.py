@@ -60,18 +60,6 @@ class Image_Processor:
     def cap_release(self):
         self.cap.release()
 
-    def set_touch_state(self, touch_variant:str, state:bool):
-        if touch_variant == 'touch':
-            self.is_touch = state
-        elif touch_variant == 'hover':
-            self.is_hover = state
-    
-    def get_touch_state(self):
-        return self.is_touch
-    
-    def get_hover_state(self):
-        return self.is_hover
-
     def get_cutoff_touch(self):
         return self.cutoff_touch
     
@@ -84,21 +72,7 @@ class Image_Processor:
     def set_hover_cutoff(self, new_cutoff):
         self.cutoff_hover = new_cutoff
 
-    def process_image(self, touch_variant:str): # touch_variant is "touch" or "hover"
-        #cutoff = 0
-        #bounding_circle_radius = 0
-        #bounding_circle_color = None
-        
-        if touch_variant == 'touch':
-            cutoff = self.cutoff_touch
-            bounding_circle_radius = RADIUS_TOUCH
-            bounding_circle_color = COLOR_TOUCH
-        elif touch_variant == 'hover':
-            cutoff = self.cutoff_hover
-            bounding_circle_radius = RADIUS_HOVER
-            bounding_circle_color = COLOR_HOVER
-        else:
-            raise Exception("use 'touch' or 'hover'")
+    def process_image(self):
 
         # Capture a frame from the webcam
         ret, frame = self.cap.read()
@@ -106,13 +80,59 @@ class Image_Processor:
         # convert the frame to grayscale img for threshold filter and getting the contours of them
         img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
-        ret, thresh = cv2.threshold(img_gray, cutoff, 255, cv2.THRESH_BINARY)
+        ret_touch, thresh_touch = cv2.threshold(img_gray, self.cutoff_touch, 255, cv2.THRESH_BINARY)
+        ret_hover, thresh_hover = cv2.threshold(img_gray, self.cutoff_hover, 255, cv2.THRESH_BINARY)
         
-        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours_touch, hierarchy_touch = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours_hover, hierarchy_hover = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+        self.set_input_status(contours_touch, contours_hover)
+        if self.is_touch:
+            bounding_circle_radius = RADIUS_TOUCH
+            bounding_circle_color = COLOR_TOUCH
+            area_contours_clustered:list = self.get_clustered_points(contours_touch)
+        else:
+            bounding_circle_radius = RADIUS_HOVER
+            bounding_circle_color = COLOR_HOVER
+            area_contours_clustered:list = self.get_clustered_points(contours_hover)
 
         # convert back to colored img to see the touch areas
         img_bgr = cv2.cvtColor(img_gray, cv2.COLOR_BAYER_BG2BGR)
 
+        final_areas:list = []
+      
+        for contour in area_contours_clustered:
+            #area = cv2.contourArea(contour)
+            
+            (x,y),radius = cv2.minEnclosingCircle(contour)
+            center = (int(x),int(y))
+            radius = bounding_circle_radius
+            cv2.circle(img_bgr,center,radius,bounding_circle_color,3)
+            final_areas.append(contour)
+    
+        img_bgr = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
+
+        return img_bgr
+    
+    def get_pyglet_image(self):
+        img = None
+        if self.frame is not None:
+            img = cv2glet(self.frame, 'BGR')
+        return img 
+    
+    def set_input_status(self, contours_touch:list, contours_hover:list):
+        if len(contours_touch) > 1:
+            self.is_touch = True
+            self.is_hover = False
+        else:
+            if len(contours_hover) > 1:
+                self.is_touch = False
+                self.is_hover = True
+            else:
+                self.is_touch = False
+                self.is_hover = False
+
+    def get_clustered_points(self, contours:list):
         # contours of the touched areas
         touch_areas_contours:list = []
 
@@ -129,14 +149,13 @@ class Image_Processor:
             filtered_arr_cluster.append(area_contours_clustered[1])
             area_contours_clustered = filtered_arr_cluster
             
-        final_areas:list = []
+       
         
         # Flackern reduzieren
         # old or new position
         if len(area_contours_clustered) > 0:
             if not self.curr_dom_touch:
                 self.curr_dom_touch.append(area_contours_clustered[0])
-            self.set_touch_state(touch_variant, True)
             for i in range(len(area_contours_clustered)):
                 (x,y),radius = cv2.minEnclosingCircle(area_contours_clustered[i])
                 if not self.last_fing_tip_coordinates:
@@ -148,42 +167,5 @@ class Image_Processor:
                 else:
                     self.last_fing_tip_coordinates[i] = (x,y)
                     self.curr_dom_touch[0] = area_contours_clustered[0]
-        else:
-            self.set_touch_state(touch_variant, False)
-            
-        for contour in area_contours_clustered:
-            area = cv2.contourArea(contour)
-            
-            (x,y),radius = cv2.minEnclosingCircle(contour)
-            center = (int(x),int(y))
-            radius = bounding_circle_radius
-            cv2.circle(img_bgr,center,radius,bounding_circle_color,3)
-            final_areas.append(contour)
-    
-        img_processed = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
 
-        return img_processed
-    
-    def get_pyglet_image(self):
-        img = None
-        if self.frame is not None:
-            img = cv2glet(self.frame, 'BGR')
-        return img 
-    
-
-    '''
-    def get_raw_image(self):
-        ret, frame = self.cap.read()
-        
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # transform to grayscale, apply threshold
-        # this allows for pixel-perfect collision detection
-        # another method could be to find the contours and detect collision with the resulting polygon
-        gray_transformed = cv2.cvtColor(frame_transformed, cv2.COLOR_BGR2GRAY)
-        ret, thresh = cv2.threshold(gray_transformed, 160, 255, cv2.THRESH_BINARY_INV)
-
-        self.thresh = thresh
-        out = frame_transformed
-
-        self.frame = out
-'''
+        return area_contours_clustered
