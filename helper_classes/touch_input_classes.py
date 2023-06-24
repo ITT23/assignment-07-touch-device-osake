@@ -4,7 +4,7 @@ import pyglet
 from PIL import Image
 from pyglet import shapes
 
-from collections import deque
+#from collections import deque
 
 # own helper classes
 from helper_classes.agglomerative_clustering_class import Agglomerative_Cluster_Model
@@ -53,9 +53,9 @@ class Image_Processor:
         self.cutoff_hover = 25
         self.aggl_clusterer = Agglomerative_Cluster_Model()
         # dominant fingertip memory
-        self.dom_fing_coordinates:list = deque(maxlen=1)
+        self.last_fing_tip_coordinates:list = [None, None]
         # current dominant fingertip touch
-        self.curr_dom_touch:list = deque(maxlen=1)
+        self.curr_dom_touch:list = [None]
 
     def cap_release(self):
         self.cap.release()
@@ -119,33 +119,34 @@ class Image_Processor:
         for contour in contours:
             area = cv2.contourArea(contour)
             if area >= AREA_LOWER_LIMIT and area <= AREA_UPPER_LIMIT:
-                #(x,y),radius = cv2.minEnclosingCircle(contour)
-                #center = (int(x),int(y))
-                #radius = int(radius) * 3
-                #cv2.circle(img_gray,center,radius,(0,255,0),3)q
                 touch_areas_contours.append(contour)
                 
         area_contours_clustered = self.aggl_clusterer.agglomerative_clustering(touch_areas_contours)
+
+        if len(area_contours_clustered) > 2:
+            filtered_arr_cluster = []
+            filtered_arr_cluster.append(area_contours_clustered[0])
+            filtered_arr_cluster.append(area_contours_clustered[1])
+            area_contours_clustered = filtered_arr_cluster
             
         final_areas:list = []
         
         # Flackern reduzieren
         # old or new position
-        # öö
         if len(area_contours_clustered) > 0:
-            self.set_touch_state(touch_variant, True)
-            (x,y),radius = cv2.minEnclosingCircle(area_contours_clustered[0])
-            print((x,y))
-            if len(self.dom_fing_coordinates) == 0:
-                self.dom_fing_coordinates.append((x,y))
-            if len(self.curr_dom_touch) == 0:
-                self.curr_dom_touch.append(area_contours_clustered[0])
-            x_old, y_old = self.dom_fing_coordinates[0]
-            if x_old - DEVIATION < x and x_old + DEVIATION > x and y_old - DEVIATION < y and y_old + DEVIATION > y:
-                area_contours_clustered[0] = self.curr_dom_touch[0]
-            else:
-                self.dom_fing_coordinates.append((x,y))
-                self.curr_dom_touch.append(area_contours_clustered[0])
+            if self.curr_dom_touch[0] == None:
+                self.curr_dom_touch[0] = area_contours_clustered[0]
+            #self.set_touch_state(touch_variant, True)
+            for i in range(len(area_contours_clustered)):
+                (x,y),radius = cv2.minEnclosingCircle(area_contours_clustered[i])
+                if self.last_fing_tip_coordinates[i] == None:
+                    self.last_fing_tip_coordinates[i] = (x,y)
+                x_old, y_old = self.last_fing_tip_coordinates[i]
+                if x_old - DEVIATION < x and x_old + DEVIATION > x and y_old - DEVIATION < y and y_old + DEVIATION > y:
+                    area_contours_clustered[0] = self.curr_dom_touch[0]
+                else:
+                    self.last_fing_tip_coordinates[i] = (x,y)
+                    self.curr_dom_touch[0] = area_contours_clustered[0]
         else:
             self.set_touch_state(touch_variant, False)
             
