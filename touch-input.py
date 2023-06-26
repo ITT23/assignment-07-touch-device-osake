@@ -26,6 +26,12 @@ from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 # HERE CALIBRATION PROCESS
 # über pyglet
 
+# nutzer sollen hovern solange bis was erkannt wird und vor allem flüssig hintereinander
+# -> sobald nicht erkannt wird soll cutoff +1 erhöht werden (von touch oder hover; je nachdem was grad kalibriert wird)
+# das Gleiche für touch
+# eventuell timer einbauen bevor kalibrierung beginnt, damit Nutzer Zeit haben den finger zu positionieren 
+# (da sonst cutoff explodiert)
+
 # webcam id
 video_id = 1
 
