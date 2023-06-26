@@ -32,6 +32,8 @@ from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 # eventuell timer einbauen bevor kalibrierung beginnt, damit Nutzer Zeit haben den finger zu positionieren 
 # (da sonst cutoff explodiert)
 
+# sobald Kalibrierung beendet wird, soll pyglet schließen und der untere while Code tritt in Kraft (Anzeige des frames raus; dippid sender code das auskommentierte wieder rein)
+
 # webcam id
 video_id = 1
 
