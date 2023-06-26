@@ -24,7 +24,7 @@ from pyglet import shapes
 from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 
 # webcam id
-video_id = 1
+video_id = 0
 
 if len(sys.argv) > 1:
     video_id = int(sys.argv[1])
@@ -45,12 +45,12 @@ while True:
     # Delete it after calibration process is integrated
     # for the calibration process pyglet is used and this line is not necessary anymore because after calibration we dont show this window
     # just for testing purposes
-    if not calibration_proc:                                                                                                                        # DELETE AFTER IMPL of calibration
-        cv2.imshow('frame', processed_img)
+    #if not calibration_proc:                                                                                                                        # DELETE AFTER IMPL of calibration
+    cv2.imshow('frame', processed_img)
 
     # Wait for a key press and check if it's the 'q' key
     # just for testing purposes, but later it could init a new calibration process
-    elif cv2.waitKey(1) & 0xFF == ord('q'):                                                                                                         # DELETE AFTER IMPL of calibration
+    if cv2.waitKey(1) & 0xFF == ord('q'):                                                                                                         # DELETE AFTER IMPL of calibration
         break
 
     #time.sleep(0.05)
