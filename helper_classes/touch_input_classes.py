@@ -45,16 +45,16 @@ class Image_Processor:
         self.cap = cv2.VideoCapture(camera_id)
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.touch_radius = self.width / 20
-        self.hover_radius = self.width / 30
+        self.touch_radius = int(self.width / 20)
+        self.hover_radius = int(self.width / 30)
         self.frame = None
         self.thresh = None
         # is input a touch or hover
         self.is_touch = False
         self.is_hover = False
         # cutoffs for touch and hover
-        self.cutoff_touch = 15
-        self.cutoff_hover = 30
+        self.cutoff_touch = 25
+        self.cutoff_hover = 40
         # used to cluster contour points in order to get the inputs
         self.aggl_clusterer = Agglomerative_Cluster_Model()
         # last coordinates for the input points
@@ -63,7 +63,10 @@ class Image_Processor:
         self.curr_dom_touch:list = []
         # amount of input points 
         self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2
-
+        
+    def show_frame(self, frame):
+        cv2.imshow('frame', frame)
+        
     def cap_release(self):
         self.cap.release()
 

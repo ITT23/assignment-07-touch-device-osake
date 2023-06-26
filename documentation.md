@@ -9,6 +9,7 @@ Document your design decisions and building process here!
 - the wooden board helps that the camera is always even (with card board there is always a bit of variance)
 - we calculated (pi times thumb) the center of the bottom and taped the camera sensor with double-sided tape
 - we taped over the IR camera because it projected a lot of white dots onto the plexis glas which were reflected and resulted in distractions for the camera
+- CHANGED CAMERA DEVICE: to Logitech camera, because the former camera made problems (to much integrated cameras)
 
 ## Preparation and Prerequisits
 - we needed to have a way to work on the assignment at home without carrieng the MT-Box with us. In order to be able to do that, we implemented a tool (webcam_recorder.py). It enables us to record webcam input and thus making some case samples (videos) to work with at home.

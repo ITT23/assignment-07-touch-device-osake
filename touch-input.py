@@ -25,14 +25,11 @@ from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 
 # webcam id
 video_id = 1
-'''
-if len(sys.argv) > 1:
-    video_id = int(sys.argv[1])
-'''
+
 
 calibration_proc = False # normally true, but since calibration process is yet not integreted its False for testing purposes
 
-image_processor = Image_Processor(video_id)
+image_processor = Image_Processor(1)
 dippid_sender = DIPPID_Sender(image_processor)
 
 while True:
@@ -46,7 +43,7 @@ while True:
     # Delete it after calibration process is integrated
     # for the calibration process pyglet is used and this line is not necessary anymore because after calibration we dont show this window
     # just for testing purposes
-    #if not calibration_proc:                                                                                                                        # DELETE AFTER IMPL of calibration
+                                                                                                                          # DELETE AFTER IMPL of calibration
     cv2.imshow('frame', processed_img)
 
     # Wait for a key press and check if it's the 'q' key
