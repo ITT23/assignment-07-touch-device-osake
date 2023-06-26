@@ -23,6 +23,9 @@ from pyglet import shapes
 # own helper classes
 from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 
+# HERE CALIBRATION PROCESS
+# über pyglet
+
 # webcam id
 video_id = 1
 
