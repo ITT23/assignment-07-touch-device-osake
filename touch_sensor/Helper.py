@@ -7,7 +7,7 @@ import pyglet
 from PIL import Image
 
 from Clustering import Clustering
-from AppState import AppState
+from AppState import AppState, Interaction
 from Config import Config
 
 
@@ -64,8 +64,7 @@ class Capture:
 class Output:
 
   def __init__(self) -> None:
-    self.is_touched = False
-    self.is_hovered = False
+    self.interaction = Interaction.NONE
     self.num_finger = 0
     self.coordinates = []
 
@@ -82,11 +81,11 @@ class Output:
       event["events"]["0"]["x"] = x
       event["events"]["0"]["y"] = y
         
-      if self.is_touched:
-        event["events"]["0"]["type"] = "touch"
+      if self.interaction == Interaction.TOUCH:
+        event["events"]["0"]["type"] = Interaction.TOUCH.name
 
       else:
-        event["events"]["0"]["type"] = "hover"
+        event["events"]["0"]["type"] = Interaction.HOVER.name
 
     if self.num_finger == 2:
       x_2, y_2 = self.coordinates[1]
@@ -99,15 +98,15 @@ class Output:
       event["events"]["1"]["x"] = x_2
       event["events"]["1"]["y"] = y_2
         
-      if self.is_touched:
-        event["events"]["0"]["type"] = "touch"
+      if self.interaction == Interaction.TOUCH:
+        event["events"]["0"]["type"] = Interaction.TOUCH.name
 
-        event["events"]["1"]["type"] = "touch"
+        event["events"]["1"]["type"] = Interaction.TOUCH.name
 
       else:
-        event["events"]["0"]["type"] = "hover"
+        event["events"]["0"]["type"] = Interaction.HOVER.name
 
-        event["events"]["1"]["type"] = "hover"
+        event["events"]["1"]["type"] = Interaction.HOVER.name
   
     return json.dumps(event)
 
@@ -118,9 +117,8 @@ class Image_Processor:
     self._video_dimensions = video_dimensions
     self.touch_radius = video_dimensions[0] // Config.TOUCH_DISPLAY_RADIUS
     self.hover_radius = video_dimensions[0] // Config.HOVER_DISPLAY_RADIUS
-    # is input a touch or hover
-    self.is_touch = False #change to enum!!!???
-    self.is_hover = False
+    # is input a touch or hover or none
+    self.interaction = Interaction.NONE
     # cutoffs for touch and hover
     self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
     self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
@@ -148,7 +146,8 @@ class Image_Processor:
     
     # check if it was a touch or hover and adjust corresponding values
     self.set_input_status(contours_touch, contours_hover)
-    if self.is_touch:
+
+    if self.interaction == Interaction.TOUCH:
       bounding_circle_radius = self.touch_radius
       bounding_circle_color = Config.COLOR_TOUCH
       area_contours_clustered = self.get_clustered_points(contours_touch)
@@ -175,24 +174,23 @@ class Image_Processor:
     img_bgr = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
 
     output = Output()
-    output.is_touched = self.is_touch
-    output.is_hovered = self.is_hover
+    output.interaction = self.interaction
     output.num_finger = self.points_number
     for finger in self.last_fing_tip_coordinates:
       output.coordinates.append(normalise_points(finger, self._video_dimensions))
 
-    return (self.is_touch or self.is_hover, img_bgr, output)
+    return (output.interaction is not Interaction.NONE, img_bgr, output)
 
   # check on the basis of the contours for touch and hover if the input is hovering or touching
   def set_input_status(self, contours_touch: list, contours_hover: list) -> None:
-    self.is_touch = False
-    self.is_hover = False
-
     if len(contours_touch) > 1:
-      self.is_touch = True
+      self.interaction = Interaction.TOUCH
 
     elif len(contours_hover) > 1:
-      self.is_hover = True
+      self.interaction = Interaction.HOVER
+    
+    else:
+      self.interaction = Interaction.NONE
 
   # agglomerative clustering of the contour points
   def get_clustered_points(self, contours: list) -> list:
@@ -251,4 +249,4 @@ class DIPPID_Sender:
       print(output.to_json())
 
     else:
-      self._socket.sendto(output.to_json(), (self._ip, self._port))
+      self._socket.sendto(output.to_json().encode(), (self._ip, self._port))
