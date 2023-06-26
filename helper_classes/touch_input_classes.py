@@ -9,8 +9,7 @@ from pyglet import shapes
 from helper_classes.agglomerative_clustering_class import Agglomerative_Cluster_Model
 
 # radius of bounding circles (bbox)
-RADIUS_TOUCH = 50
-RADIUS_HOVER = 30
+
 # color of bounding circles (bbox)
 COLOR_TOUCH = (255, 0, 0)
 COLOR_HOVER = (0, 128, 0)
@@ -46,6 +45,8 @@ class Image_Processor:
         self.cap = cv2.VideoCapture(camera_id)
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.touch_radius = self.width / 20
+        self.hover_radius = self.width / 30
         self.frame = None
         self.thresh = None
         # is input a touch or hover
@@ -53,7 +54,7 @@ class Image_Processor:
         self.is_hover = False
         # cutoffs for touch and hover
         self.cutoff_touch = 15
-        self.cutoff_hover = 25
+        self.cutoff_hover = 30
         # used to cluster contour points in order to get the inputs
         self.aggl_clusterer = Agglomerative_Cluster_Model()
         # last coordinates for the input points
@@ -116,11 +117,11 @@ class Image_Processor:
         # check if it was a touch or hover and adjust corresponding values
         self.set_input_status(contours_touch, contours_hover)
         if self.is_touch:
-            bounding_circle_radius = RADIUS_TOUCH
+            bounding_circle_radius = self.touch_radius
             bounding_circle_color = COLOR_TOUCH
             area_contours_clustered:list = self.get_clustered_points(contours_touch)
         else:
-            bounding_circle_radius = RADIUS_HOVER
+            bounding_circle_radius = self.hover_radius
             bounding_circle_color = COLOR_HOVER
             area_contours_clustered:list = self.get_clustered_points(contours_hover)
 

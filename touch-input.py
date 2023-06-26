@@ -24,10 +24,11 @@ from pyglet import shapes
 from helper_classes.touch_input_classes import Image_Processor, DIPPID_Sender
 
 # webcam id
-video_id = 0
-
+video_id = 1
+'''
 if len(sys.argv) > 1:
     video_id = int(sys.argv[1])
+'''
 
 calibration_proc = False # normally true, but since calibration process is yet not integreted its False for testing purposes
 

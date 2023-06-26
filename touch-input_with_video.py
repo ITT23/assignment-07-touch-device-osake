@@ -30,7 +30,7 @@ RECORDED_SESSION = path.join(CURR_DIR, f"assets/touch_hover_leichter_2.mp4") # H
 
 calibration_proc = True # normally true, but since calibration process is yet not integreted its False for testing purposes
 
-image_processor = Image_Processor(RECORDED_SESSION)
+image_processor = Image_Processor(1)
 dippid_sender = DIPPID_Sender(image_processor)
 
 
