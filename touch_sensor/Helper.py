@@ -36,7 +36,10 @@ def cv2glet(img: Mat, fmt: str) -> pyglet.image.ImageData:
 
 
 def normalise_points(points: tuple, dimensions: tuple) -> tuple[float, float]:
-  return (points[0] / dimensions[0], points[1] / dimensions[1])
+  '''
+    subtract y-axis from 1 so that point of origin is in the top left corner 
+  '''
+  return (points[0] / dimensions[0], 1 - (points[1] / dimensions[1]))
 
 
 class Capture:
@@ -138,7 +141,7 @@ class Image_Processor:
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
-  def process_image(self, frame: Mat) -> Union[bool, Mat, Output]:
+  def process_image(self, frame: Mat) -> tuple[bool, Mat, Output]:
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
@@ -180,6 +183,8 @@ class Image_Processor:
       final_areas.append(contour)
 
     img_bgr = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
+    #flipping the image on the vertical axis so that (0,0) is in the top left corner
+    flipped_image = cv2.flip(img_bgr, 0)
 
     output = Output()
     output.interaction = self.interaction
@@ -187,7 +192,7 @@ class Image_Processor:
     for finger in self.last_fing_tip_coordinates:
       output.coordinates.append(normalise_points(finger, self._video_dimensions))
 
-    return (output.interaction is not Interaction.NONE, img_bgr, output)
+    return (output.interaction is not Interaction.NONE, flipped_image, output)
 
   # check on the basis of the contours for touch and hover if the input is hovering or touching
   def set_input_status(self, contours_touch: list, contours_hover: list) -> None:
