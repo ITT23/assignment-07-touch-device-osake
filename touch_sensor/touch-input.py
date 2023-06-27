@@ -25,8 +25,13 @@ from argparse import ArgumentParser, ArgumentTypeError
 
 import cv2
 
+from os import path
+
 from Helper import Image_Processor, DIPPID_Sender, Capture, Calibration
 from AppState import AppState
+
+CURR_DIR = path.dirname(__file__)
+RECORDED_SESSION = path.join(CURR_DIR, "../assets/gestures/check_hover.mp4")
 
 class Application:
 
@@ -138,7 +143,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default=None, type=str, help="relative path to video record")
+  group.add_argument("--video_path", default=RECORDED_SESSION, type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")

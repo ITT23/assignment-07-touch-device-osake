@@ -119,8 +119,7 @@ class Output:
 
 class Image_Processor:
 
-  def __init__(self, video_dimensions: tuple, calibration: dict, camera_id):
-    self.cap = cv2.VideoCapture(camera_id)
+  def __init__(self, video_dimensions: tuple, calibration: dict):
     self.frame = None
     self._video_dimensions = video_dimensions
     self.touch_radius = video_dimensions[0] // Config.TOUCH_DISPLAY_RADIUS

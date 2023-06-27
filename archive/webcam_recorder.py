@@ -4,7 +4,7 @@ from os import path
 import uuid
 
 CURR_DIR = path.dirname(__file__)
-RECORDINGS_PATH = path.join(CURR_DIR, f".../assets/gestures/check_hover.mp4")
+RECORDINGS_PATH = path.join(CURR_DIR, "../assets/gestures/random_hover_and_touch2.mp4")
 
 video_id = 1
 
