@@ -119,7 +119,9 @@ class Output:
 
 class Image_Processor:
 
-  def __init__(self, video_dimensions: tuple, calibration: dict):
+  def __init__(self, video_dimensions: tuple, calibration: dict, camera_id):
+    self.cap = cv2.VideoCapture(camera_id)
+    self.frame = None
     self._video_dimensions = video_dimensions
     self.touch_radius = video_dimensions[0] // Config.TOUCH_DISPLAY_RADIUS
     self.hover_radius = video_dimensions[0] // Config.HOVER_DISPLAY_RADIUS
@@ -180,6 +182,8 @@ class Image_Processor:
     img_bgr = cv2.drawContours(img_bgr, final_areas, -1, (255, 160, 122), 3)
     #flipping the image on the vertical axis so that (0,0) is in the top left corner
     flipped_image = cv2.flip(img_bgr, 0)
+    # need for the calibration process (pyglet)
+    self.frame = flipped_image
 
     output = Output()
     output.interaction = self.interaction
@@ -243,6 +247,23 @@ class Image_Processor:
     self.points_number = len(area_contours_clustered)
 
     return area_contours_clustered
+  
+  def get_pyglet_image(self):
+        img = None
+        if self.frame is not None:
+            img = cv2glet(self.frame, 'BGR')
+        return img 
+  
+class Calibration:
+  
+  def __init__(self, image_processor:Image_Processor):
+    self.image_handler = image_processor
+    
+  def draw(self):
+        self.image_handler.process_image()
+        img = self.image_handler.get
+        if img is not None:
+            img.blit(0,0,0)
     
 
 class DIPPID_Sender:

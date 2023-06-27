@@ -20,11 +20,12 @@ eventuell timer einbauen bevor kalibrierung beginnt, damit Nutzer Zeit haben den
 sobald Kalibrierung beendet wird, soll pyglet schließen und der untere while Code tritt in Kraft (Anzeige des frames raus; dippid sender code das auskommentierte wieder rein)
 '''
 import time, os
+import pyglet
 from argparse import ArgumentParser, ArgumentTypeError
 
 import cv2
 
-from Helper import Image_Processor, DIPPID_Sender, Capture
+from Helper import Image_Processor, DIPPID_Sender, Capture, Calibration
 from AppState import AppState
 
 class Application:
@@ -65,8 +66,25 @@ class Application:
     self.running = True
 
   def _perform_calibration(self) -> None:
-    print("NYI")#TODO
-    pass
+    #print("NYI")#TODO
+    #pass
+    window = pyglet.window.Window(self.capture.width, self.capture.height, resizable=False)
+    batch = pyglet.graphics.Batch()
+    
+    calibration = None
+
+    @window.event
+    def on_draw():
+        if calibration is not None:
+            window.clear()
+            calibration.draw()
+            batch.draw()
+
+    if __name__ == "__main__":
+        calibration = Calibration()
+        pyglet.clock.schedule_interval(calibration.update, 0.2)
+        pyglet.app.run()
+    
 
   def _load_calibration_values(self) -> None:
     with open(self.CALIBRATION_FILE, "r") as f:
