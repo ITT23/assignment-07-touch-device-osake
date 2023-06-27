@@ -13,23 +13,25 @@ from Config import Config
 
 # convert cv2 image format to pyglet image format
 ## https://gist.github.com/nkymut/1cb40ea6ae4de0cf9ded7332f1ca0d55
-def cv2glet(img,fmt):
+def cv2glet(img: Mat, fmt: str) -> pyglet.image.ImageData:
     '''Assumes image is in BGR color space. Returns a pyimg object'''
     if fmt == 'GRAY':
       rows, cols = img.shape
       channels = 1
+
     else:
       rows, cols, channels = img.shape
 
     raw_img = Image.fromarray(img).tobytes()
 
     top_to_bottom_flag = -1
-    bytes_per_row = channels*cols
+    bytes_per_row = channels * cols
     pyimg = pyglet.image.ImageData(width=cols, 
                                    height=rows, 
                                    fmt=fmt, 
                                    data=raw_img, 
-                                   pitch=top_to_bottom_flag*bytes_per_row)
+                                   pitch=top_to_bottom_flag * bytes_per_row)
+
     return pyimg
 
 
@@ -42,6 +44,7 @@ class Capture:
   def __init__(self, video_path: str, video_id: int) -> None:
     if video_path is not None:
       self.capture = cv2.VideoCapture(video_path)
+
     else:
       self.capture = cv2.VideoCapture(video_id)
     
@@ -82,10 +85,10 @@ class Output:
       event["events"]["0"]["y"] = y
         
       if self.interaction == Interaction.TOUCH:
-        event["events"]["0"]["type"] = Interaction.TOUCH.name
+        event["events"]["0"]["type"] = Interaction.TOUCH.name.lower()
 
       else:
-        event["events"]["0"]["type"] = Interaction.HOVER.name
+        event["events"]["0"]["type"] = Interaction.HOVER.name.lower()
 
     if self.num_finger == 2:
       x_2, y_2 = self.coordinates[1]
@@ -99,14 +102,14 @@ class Output:
       event["events"]["1"]["y"] = y_2
         
       if self.interaction == Interaction.TOUCH:
-        event["events"]["0"]["type"] = Interaction.TOUCH.name
+        event["events"]["0"]["type"] = Interaction.TOUCH.name.lower()
 
-        event["events"]["1"]["type"] = Interaction.TOUCH.name
+        event["events"]["1"]["type"] = Interaction.TOUCH.name.lower()
 
       else:
-        event["events"]["0"]["type"] = Interaction.HOVER.name
+        event["events"]["0"]["type"] = Interaction.HOVER.name.lower()
 
-        event["events"]["1"]["type"] = Interaction.HOVER.name
+        event["events"]["1"]["type"] = Interaction.HOVER.name.lower()
   
     return json.dumps(event)
 
@@ -195,7 +198,7 @@ class Image_Processor:
   # agglomerative clustering of the contour points
   def get_clustered_points(self, contours: list) -> list:
     # contours of the touched areas
-    touch_areas_contours:list = []
+    touch_areas_contours: list = []
 
     for contour in contours:
       area = cv2.contourArea(contour)

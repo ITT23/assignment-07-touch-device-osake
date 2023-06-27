@@ -86,13 +86,11 @@ class Application:
         print("no frames to process... terminating application")
         break
 
+      t1 = time.time()
       success, processed_img, output = self.image_processor.process_image(frame)
-
-      # TEST: if events are correct
-      
-      # Delete it after calibration process is integrated
-      # for the calibration process pyglet is used and this line is not necessary anymore because after calibration we dont show this window
-      # just for testing purposes
+      t2 = time.time()
+      if self.state == AppState.DEBUG:
+        print(f"processing time for this frame was {t2-t1} seconds.")
       
       if self.state is not AppState.DEFAULT:
         self.capture.show_frame(processed_img)
