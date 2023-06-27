@@ -138,6 +138,8 @@ class Image_Processor:
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
     self.box_size = []#TODO: remove again
+    self.all_img = 0
+    self.rec_img = 0
 
   #TODO: remove again
   def report_box_size(self) -> float:
@@ -148,12 +150,13 @@ class Image_Processor:
   def process_image(self, frame: Mat) -> tuple[bool, Mat, Output]:
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    self.all_img += 1
 
     #TODO: keep track if previous touches -> touch is not only in one frame but over a series of frames and does not flicker/jump; therefore we can tell that some points are bullshit; not working for the first few frames when there is no previous info; also not working if there is currently no touch event
 
     KERNEL_SIZE = 20
     CUTOFF = 45
-    MAX_BOXES = 4
+    MAX_BOXES = 2
     TOUCH_HOVER_CUTOFF = 850
     MIN_AREA = 250
     MAX_AREA = 2500
@@ -184,6 +187,9 @@ class Image_Processor:
       self.box_size.append(box_size)
 
       boxes.append(np.int0(cv2.boxPoints(rect)))
+    
+    if touched:
+      self.rec_img += 1
     
     if touched and len(self.box_size) > 0:
       print(self.box_size[-1] < TOUCH_HOVER_CUTOFF)#False -> Touch, True -> Hover

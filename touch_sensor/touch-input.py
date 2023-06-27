@@ -84,6 +84,7 @@ class Application:
 
       if not ret:
         print(f"area size is: {self.image_processor.report_box_size()}")#TODO: remove again
+        print(f"areas recognised in {self.image_processor.rec_img / self.image_processor.all_img * 100}% of all frames.")
         print("no frames to process... terminating application")
         break
 
