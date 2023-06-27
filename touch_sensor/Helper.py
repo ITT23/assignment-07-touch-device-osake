@@ -77,12 +77,13 @@ class Output:
       }
     }
     
-    x, y = self.coordinates[0]
 
     if self.num_finger == 1: #probably unnessecary because function will not be called when finger == 0
+      x, y = self.coordinates[0]
       event["events"]["0"] = {}
       event["events"]["0"]["x"] = x
       event["events"]["0"]["y"] = y
+      
         
       if self.interaction == Interaction.TOUCH:
         event["events"]["0"]["type"] = Interaction.TOUCH.name.lower()
@@ -91,6 +92,7 @@ class Output:
         event["events"]["0"]["type"] = Interaction.HOVER.name.lower()
 
     if self.num_finger == 2:
+      x, y = self.coordinates[0]
       x_2, y_2 = self.coordinates[1]
 
       event["events"]["0"] = {}
@@ -139,6 +141,9 @@ class Image_Processor:
   def process_image(self, frame: Mat) -> Union[bool, Mat, Output]:
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+     # median filter
+    #img_median_filtered = cv2.medianBlur(img_gray, 5)
     
     # analyse thresh of image regarding touch and hover
     _, thresh_touch = cv2.threshold(img_gray, self.cutoff_touch, 255, cv2.THRESH_BINARY)
@@ -206,6 +211,14 @@ class Image_Processor:
         touch_areas_contours.append(contour)
             
     area_contours_clustered = self.clustering.cluster(touch_areas_contours)
+    
+    final_clustered_areas:list = []
+    for i in range(len(area_contours_clustered)):
+      if len(final_clustered_areas) < 2 and len(area_contours_clustered[i]) > 15:
+        final_clustered_areas.append(area_contours_clustered[i])
+    area_contours_clustered = final_clustered_areas
+    
+    
 
     if len(area_contours_clustered) > 2:
       filtered_arr_cluster = []
@@ -234,6 +247,8 @@ class Image_Processor:
         else:
           self.last_fing_tip_coordinates[i] = (x,y)
           self.curr_dom_touch[0] = area_contours_clustered[0]
+          
+    
     
     self.points_number = len(area_contours_clustered)
 
