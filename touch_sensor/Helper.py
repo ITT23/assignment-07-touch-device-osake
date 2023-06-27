@@ -154,6 +154,9 @@ class Image_Processor:
     KERNEL_SIZE = 20
     CUTOFF = 45
     MAX_BOXES = 4
+    TOUCH_HOVER_CUTOFF = 850
+    MIN_AREA = 250
+    MAX_AREA = 2500
 
     #dilate->erode=>closes the gamp between areas -> fewer contours
     kernel = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
@@ -175,7 +178,7 @@ class Image_Processor:
 
       box_size = rect[1][0] * rect[1][0]
       #only keep areas within a defined area size (check what area sizes are common)
-      if 250 > box_size or box_size > 2500:
+      if MIN_AREA > box_size or box_size > MAX_AREA:
         continue
       touched = True
       self.box_size.append(box_size)
@@ -183,7 +186,7 @@ class Image_Processor:
       boxes.append(np.int0(cv2.boxPoints(rect)))
     
     if touched and len(self.box_size) > 0:
-      print(self.box_size[-1]<850)#False -> Touch, True -> Hover
+      print(self.box_size[-1] < TOUCH_HOVER_CUTOFF)#False -> Touch, True -> Hover
       touched = False
 
     img_bgr = cv2.drawContours(frame, boxes, -1, (0, 255, 0), 3)
