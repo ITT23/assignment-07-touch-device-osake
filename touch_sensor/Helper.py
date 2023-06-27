@@ -1,10 +1,11 @@
 from typing import Union
-import socket, json
+import socket, json, math
 
 import cv2
 from cv2 import Mat
 import pyglet
 from PIL import Image
+import numpy as np
 
 from Clustering import Clustering
 from AppState import AppState, Interaction
@@ -136,15 +137,60 @@ class Image_Processor:
     self.curr_dom_touch: list = []
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
+    self.box_size = []#TODO: remove again
+
+  #TODO: remove again
+  def report_box_size(self) -> float:
+    return np.median(self.box_size)
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
   def process_image(self, frame: Mat) -> tuple[bool, Mat, Output]:
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    #TODO: keep track if previous touches -> touch is not only in one frame but over a series of frames and does not flicker/jump; therefore we can tell that some points are bullshit; not working for the first few frames when there is no previous info; also not working if there is currently no touch event
+
+    KERNEL_SIZE = 20
+    CUTOFF = 45
+    MAX_BOXES = 4
+
+    #dilate->erode=>closes the gamp between areas -> fewer contours
+    kernel = np.ones((KERNEL_SIZE, KERNEL_SIZE), np.uint8)
+    edges = cv2.dilate(img_gray, kernel)
+    edges = cv2.erode(edges, kernel)
+
     
     # analyse thresh of image regarding touch and hover
-    _, thresh_touch = cv2.threshold(img_gray, self.cutoff_touch, 255, cv2.THRESH_BINARY)
+    _, thresh_touch = cv2.threshold(edges, CUTOFF, 255, cv2.THRESH_BINARY)
+    contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    if len(contours_touch) > MAX_BOXES: #if there are more than X boxes, there must be an error =>
+      return None, frame, None 
+
+    boxes = [] #saves area sizes of contours if it is between 250 and 2500
+    touched = False
+    for contour in contours_touch:
+      rect = cv2.minAreaRect(contour)
+
+      box_size = rect[1][0] * rect[1][0]
+      #only keep areas within a defined area size (check what area sizes are common)
+      if 250 > box_size or box_size > 2500:
+        continue
+      touched = True
+      self.box_size.append(box_size)
+
+      boxes.append(np.int0(cv2.boxPoints(rect)))
+    
+    if touched and len(self.box_size) > 0:
+      print(self.box_size[-1]<850)#False -> Touch, True -> Hover
+      touched = False
+
+    img_bgr = cv2.drawContours(frame, boxes, -1, (0, 255, 0), 3)
+
+    return None, img_bgr, None
+
+
     _, thresh_hover = cv2.threshold(img_gray, self.cutoff_hover, 255, cv2.THRESH_BINARY)
     # get contours for hover and touch (if available)
     contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

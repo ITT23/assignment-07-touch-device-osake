@@ -83,20 +83,21 @@ class Application:
       ret, frame = self.capture.next_image()
 
       if not ret:
+        print(f"area size is: {self.image_processor.report_box_size()}")#TODO: remove again
         print("no frames to process... terminating application")
         break
 
       t1 = time.time()
       success, processed_img, output = self.image_processor.process_image(frame)
       t2 = time.time()
-      if self.state == AppState.DEBUG:
-        print(f"processing time for this frame was {t2-t1} seconds.")
+      #if self.state == AppState.DEBUG:
+        #print(f"processing time for this frame was {t2-t1} seconds.")
       
       if self.state is not AppState.DEFAULT:
         self.capture.show_frame(processed_img)
       
-      if success:
-        self.sender.send_event(output, self.state)
+      #if success:
+      #  self.sender.send_event(output, self.state)
 
       # Wait for a key press and check if it's the 'q' key
       # just for testing purposes, but later it could init a new calibration process
