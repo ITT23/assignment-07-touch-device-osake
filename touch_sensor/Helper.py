@@ -6,7 +6,7 @@ import pyglet
 from PIL import Image
 from cv2 import Mat
 from Clustering import Clustering
-from AppState import AppState, Interaction
+from AppState import AppState, Interaction, CalibrationState
 from Config import Config
 from typing import Union
 
@@ -79,10 +79,10 @@ class Output:
       "events": {
       }
     }
-    
-    x, y = self.coordinates[0]
 
     if self.num_finger == 1: #probably unnessecary because function will not be called when finger == 0
+      x, y = self.coordinates[0]
+
       event["events"]["0"] = {}
       event["events"]["0"]["x"] = x
       event["events"]["0"]["y"] = y
@@ -265,15 +265,46 @@ class Image_Processor:
   
 class Calibration:
   
-  def __init__(self, image_processor:Image_Processor):
-    self.image_handler = image_processor
+  def __init__(self, capture:Capture):
+    self.window_width = capture.width
+    self.window_height = capture.height
+    self.active = False
+    self.info_txt_pos = ()
+    self.state = CalibrationState.HOVER_INFO
     
-  def draw(self):
-        self.image_handler.process_image()
-        img = self.image_handler.get
-        if img is not None:
-            img.blit(0,0,0)
-    
+  def set_status(self):
+    if self.active:
+      self.active = False
+      self.state = CalibrationState.FINISHED
+    else:
+      self.active = True
+      self.state = CalibrationState.HOVER_INFO
+
+  def set_info_txt(self, image:Image):
+    if self.state is CalibrationState.HOVER_INFO:
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_1, (int(self.window_width * 0.1), int(self.window_height * 0.3)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_2, (int(self.window_width * 0.1), int(self.window_height * 0.4)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_3, (int(self.window_width * 0.1), int(self.window_height * 0.5)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_4, (int(self.window_width * 0.1), int(self.window_height * 0.6)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    elif self.state is CalibrationState.TOUCH_INFO:
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_1, (int(self.window_width * 0.1), int(self.window_height * 0.3)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_2, (int(self.window_width * 0.1), int(self.window_height * 0.4)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_3, (int(self.window_width * 0.1), int(self.window_height * 0.5)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_4, (int(self.window_width * 0.1), int(self.window_height * 0.6)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_5, (int(self.window_width * 0.1), int(self.window_height * 0.7)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    return processed_img
+
+  def set_touch_state(self):
+    self.state = CalibrationState.TOUCH
 
 class DIPPID_Sender:
 

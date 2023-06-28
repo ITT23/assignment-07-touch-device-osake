@@ -28,7 +28,7 @@ import cv2
 from os import path
 
 from Helper import Image_Processor, DIPPID_Sender, Capture, Calibration
-from AppState import AppState
+from AppState import AppState, CalibrationState
 
 #CURR_DIR = path.dirname(__file__)
 #RECORDED_SESSION = path.join(CURR_DIR, "../assets/gestures/check_hover_1.mp4")
@@ -44,6 +44,8 @@ class Application:
     self.dippid_port = dippid_port
     self.state = state
     self.eps = 1 / eps
+    self.capture = Capture(self.video_path, self.video_id)
+    self.calibration_proc = Calibration(self.capture)
 
     self.calibration = {
       "CUTOFF_TOUCH": 0,
@@ -57,13 +59,13 @@ class Application:
 
     else:
       self._load_calibration_values()
+      self.calibration_proc.set_status()
 
     if self.video_path is not None:
       path = os.path.join(self.CURR_DIR, self.video_path)
       if not os.path.exists(path):
         raise Exception("provided path to videos does not exist")
 
-    self.capture = Capture(self.video_path, self.video_id)
     self._video_dimensions = (self.capture.width, self.capture.height)
     self.image_processor = Image_Processor(video_dimensions=self._video_dimensions, calibration=self.calibration)
     self.sender = DIPPID_Sender(self.dippid_port)   
@@ -73,23 +75,7 @@ class Application:
   def _perform_calibration(self) -> None:
     #print("NYI")#TODO
     #pass
-    window = pyglet.window.Window(self.capture.width, self.capture.height, resizable=False)
-    batch = pyglet.graphics.Batch()
-    
-    calibration = None
-
-    @window.event
-    def on_draw():
-        if calibration is not None:
-            window.clear()
-            calibration.draw()
-            batch.draw()
-
-    if __name__ == "__main__":
-        calibration = Calibration()
-        pyglet.clock.schedule_interval(calibration.update, 0.2)
-        pyglet.app.run()
-    
+    self.calibration_proc.set_status()
 
   def _load_calibration_values(self) -> None:
     with open(self.CALIBRATION_FILE, "r") as f:
@@ -115,8 +101,12 @@ class Application:
       if self.state == AppState.DEBUG:
         pass
         #print(f"processing time for this frame was {t2-t1} seconds.")
+
+      # add calibration info to the image (if calibration active)
+      if self.calibration_proc.active:
+        processed_img = self.calibration_proc.set_info_txt(processed_img)
       
-      if self.state is not AppState.DEFAULT:
+      if self.state is not AppState.DEFAULT and self.calibration_proc.active:
         self.capture.show_frame(processed_img)
       
       if success:
@@ -132,6 +122,8 @@ class Application:
       if self.eps > 0:
         time.sleep(self.eps)
 
+      time.sleep(0.01)
+
 
 def check_eps_value(value: int) -> str:
   if value == 0 or value < -1 or value > 120:
@@ -144,7 +136,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default="../assets/gestures/check_hover_2.mp4", type=str, help="relative path to video record")
+  group.add_argument("--video_path", default="../assets/gestures/random_hover_and_touch.mp4", type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
