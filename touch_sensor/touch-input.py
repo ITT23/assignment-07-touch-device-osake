@@ -20,17 +20,19 @@ eventuell timer einbauen bevor kalibrierung beginnt, damit Nutzer Zeit haben den
 sobald Kalibrierung beendet wird, soll pyglet schließen und der untere while Code tritt in Kraft (Anzeige des frames raus; dippid sender code das auskommentierte wieder rein)
 '''
 import time, os
-from argparse import ArgumentParser, ArgumentTypeError
-
 import cv2
 
 from Helper import Image_Processor, DIPPID_Sender, Capture
 from AppState import AppState
 
+from argparse import ArgumentParser, ArgumentTypeError
+
+
 class Application:
 
   CURR_DIR = os.path.dirname(__file__)
   CALIBRATION_FILE = os.path.join(CURR_DIR, "calibration.txt")
+  RECORDED_SESSION = os.path.join(CURR_DIR, "check_hover_1.mp4")
 
   def __init__(self, video_path: str, video_id: int, dippid_port: int, state: AppState, eps: int) -> None:
     self.video_path = video_path
@@ -122,7 +124,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default=None, type=str, help="relative path to video record")
+  group.add_argument("--video_path", default="random_hover_and_touch.mp4", type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
@@ -134,3 +136,5 @@ if __name__ == "__main__":
   application = Application(video_path= args.video_path, video_id=args.video_id, dippid_port=args.p, state=AppState[args.s.upper()], eps=args.e)
 
   application.run()
+
+  # py touch-input.py --video_id 1 -s debug
