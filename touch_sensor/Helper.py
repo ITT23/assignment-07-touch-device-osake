@@ -1,14 +1,14 @@
-from typing import Union
 import socket, json
-
 import cv2
-from cv2 import Mat
+import numpy as np
 import pyglet
-from PIL import Image
 
+from PIL import Image
+from cv2 import Mat
 from Clustering import Clustering
 from AppState import AppState, Interaction
 from Config import Config
+from typing import Union
 
 
 # convert cv2 image format to pyglet image format
@@ -119,6 +119,11 @@ class Output:
 
 class Image_Processor:
 
+  KERNEL_SIZE = 20
+  CUTOFF = 45
+  MAX_BOXES = 2
+  TOUCH_HOVER_CUTOFF = 850
+
   def __init__(self, video_dimensions: tuple, calibration: dict):
     self.frame = None
     self._video_dimensions = video_dimensions
@@ -143,10 +148,15 @@ class Image_Processor:
   def process_image(self, frame: Mat) -> tuple[bool, Mat, Output]:
     # convert the frame to grayscale img for threshold filter and getting the contours of them
     img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    #dilate->erode=>closes the gamp between areas -> fewer contours
+    kernel = np.ones((self.KERNEL_SIZE, self.KERNEL_SIZE), np.uint8)
+    edges_img = cv2.dilate(img_gray, kernel)
+    edges_img = cv2.erode(edges_img, kernel)
     
     # analyse thresh of image regarding touch and hover
-    _, thresh_touch = cv2.threshold(img_gray, self.cutoff_touch, 255, cv2.THRESH_BINARY)
-    _, thresh_hover = cv2.threshold(img_gray, self.cutoff_hover, 255, cv2.THRESH_BINARY)
+    _, thresh_touch = cv2.threshold(edges_img, self.cutoff_touch, 255, cv2.THRESH_BINARY)
+    _, thresh_hover = cv2.threshold(edges_img, self.cutoff_hover, 255, cv2.THRESH_BINARY)
     # get contours for hover and touch (if available)
     contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours_hover, _ = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

@@ -30,8 +30,8 @@ from os import path
 from Helper import Image_Processor, DIPPID_Sender, Capture, Calibration
 from AppState import AppState
 
-CURR_DIR = path.dirname(__file__)
-RECORDED_SESSION = path.join(CURR_DIR, "../assets/gestures/check_hover.mp4")
+#CURR_DIR = path.dirname(__file__)
+#RECORDED_SESSION = path.join(CURR_DIR, "../assets/gestures/check_hover_1.mp4")
 
 class Application:
 
@@ -106,14 +106,15 @@ class Application:
       ret, frame = self.capture.next_image()
 
       if not ret:
-        print("no frames to process... terminating application")
+        #print("no frames to process... terminating application")
         break
 
       t1 = time.time()
       success, processed_img, output = self.image_processor.process_image(frame)
       t2 = time.time()
       if self.state == AppState.DEBUG:
-        print(f"processing time for this frame was {t2-t1} seconds.")
+        pass
+        #print(f"processing time for this frame was {t2-t1} seconds.")
       
       if self.state is not AppState.DEFAULT:
         self.capture.show_frame(processed_img)
@@ -143,7 +144,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default=RECORDED_SESSION, type=str, help="relative path to video record")
+  group.add_argument("--video_path", default="../assets/gestures/check_hover_2.mp4", type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
@@ -155,3 +156,5 @@ if __name__ == "__main__":
   application = Application(video_path= args.video_path, video_id=args.video_id, dippid_port=args.p, state=AppState[args.s.upper()], eps=args.e)
 
   application.run()
+
+   # py touch-input.py --video_id 1 -s debug
