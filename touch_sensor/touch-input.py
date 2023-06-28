@@ -45,7 +45,9 @@ class Application:
     self.state = state
     self.eps = 1 / eps
     self.capture = Capture(self.video_path, self.video_id)
-    self.calibration_proc = Calibration(self.capture)
+    self._video_dimensions = (self.capture.width, self.capture.height)
+    self.image_processor = Image_Processor(video_dimensions=self._video_dimensions)
+    self.calibration_proc = Calibration(self.capture, self.image_processor)
 
     self.calibration = {
       "CUTOFF_TOUCH": 0,
@@ -66,8 +68,7 @@ class Application:
       if not os.path.exists(path):
         raise Exception("provided path to videos does not exist")
 
-    self._video_dimensions = (self.capture.width, self.capture.height)
-    self.image_processor = Image_Processor(video_dimensions=self._video_dimensions, calibration=self.calibration)
+    self.image_processor.apply_calibration_cutoff(calibration=self.calibration)
     self.sender = DIPPID_Sender(self.dippid_port)   
 
     self.running = True
@@ -105,12 +106,14 @@ class Application:
       # add calibration info to the image (if calibration active)
       if self.calibration_proc.active:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
+        self.calibration_proc.calibrate_cutoff()
       
       if self.state is not AppState.DEFAULT and self.calibration_proc.active:
         self.capture.show_frame(processed_img)
       
       if success:
-        self.sender.send_event(output, self.state)
+        pass
+        #self.sender.send_event(output, self.state)
 
       # Wait for a key press and check if it's the 'q' key
       # just for testing purposes, but later it could init a new calibration process
@@ -118,6 +121,11 @@ class Application:
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
+      elif cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active:
+        if self.calibration_proc.state == CalibrationState.HOVER_INFO:
+          self.calibration_proc.state = CalibrationState.HOVER
+        elif self.calibration_proc.state == CalibrationState.TOUCH_INFO:
+          self.calibration_proc.state = CalibrationState.TOUCH
 
       if self.eps > 0:
         time.sleep(self.eps)

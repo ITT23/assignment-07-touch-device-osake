@@ -124,16 +124,13 @@ class Image_Processor:
   MAX_BOXES = 2
   TOUCH_HOVER_CUTOFF = 850
 
-  def __init__(self, video_dimensions: tuple, calibration: dict):
+  def __init__(self, video_dimensions: tuple):
     self.frame = None
     self._video_dimensions = video_dimensions
     self.touch_radius = video_dimensions[0] // Config.TOUCH_DISPLAY_RADIUS
     self.hover_radius = video_dimensions[0] // Config.HOVER_DISPLAY_RADIUS
     # is input a touch or hover or none
     self.interaction = Interaction.NONE
-    # cutoffs for touch and hover
-    self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
-    self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
     # used to cluster contour points in order to get the inputs
     self.clustering = Clustering()
     # last coordinates for the input points
@@ -142,6 +139,11 @@ class Image_Processor:
     self.curr_dom_touch: list = []
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
+
+  def apply_calibration_cutoff(self, calibration:dict):
+    # cutoffs for touch and hover
+    self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
+    self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
@@ -265,12 +267,16 @@ class Image_Processor:
   
 class Calibration:
   
-  def __init__(self, capture:Capture):
+  def __init__(self, capture:Capture, image_proc:Image_Processor):
     self.window_width = capture.width
     self.window_height = capture.height
+    self.image_processor = image_proc
     self.active = False
     self.info_txt_pos = ()
     self.state = CalibrationState.HOVER_INFO
+    self.cutoff_hover = 10
+    self.cutoff_touch = 10
+    self.detection_outcome:list = []
     
   def set_status(self):
     if self.active:
@@ -278,7 +284,40 @@ class Calibration:
       self.state = CalibrationState.FINISHED
     else:
       self.active = True
+      # in case you can restart the calibration process
       self.state = CalibrationState.HOVER_INFO
+
+  # If no finger was detected, the associated cutoff value is increased by 1. The result is stored in the detection_outcome array. 
+  # If the finger is recognized and no more than 1 finger is recognized, the value 1 is added to the array. Otherwise 0. 
+  # After 150 evaluated images (approx. 5 seconds) it is checked whether 130 times the correct recognition was made.
+  def calibrate_cutoff(self):
+    if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
+      if self.image_processor.interaction == Interaction.NONE:
+        if self.state == CalibrationState.HOVER:
+          self.cutoff_hover += 1
+        else:
+          self.cutoff_touch += 1
+        self.detection_outcome.append(0)
+      else:
+        if self.image_processor.points_number < 2:
+          self.detection_outcome.append(1)
+        else:
+          self.detection_outcome.append(0)
+      print(len(self.detection_outcome))
+      if len(self.detection_outcome) >= Config.CALIBRATION_THRESHOLD: # 150
+        if self.detection_outcome.count(1) >= Config.CALIBRATION_THRESHOLD_ACCEPTANCE: # 130
+          if self.state.HOVER:
+            self.state = CalibrationState.TOUCH_INFO
+            self.detection_outcome = []
+            print("Calculated Hover Cutoff is" + str(self.cutoff_hover))
+          elif self.state.TOUCH:
+            self.state = CalibrationState.FINISHED
+            self.detection_outcome = []
+            self.active = False
+            print("Calculated Touch Cutoff is " + str(self.cutoff_touch))
+        else:
+          self.detection_outcome = []
+
 
   def set_info_txt(self, image:Image):
     if self.state is CalibrationState.HOVER_INFO:
@@ -301,6 +340,13 @@ class Calibration:
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
       processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_5, (int(self.window_width * 0.1), int(self.window_height * 0.7)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    elif self.state is CalibrationState.HOVER:
+      processed_img = cv2.putText(image, Config.HOVER_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    elif self.state is CalibrationState.TOUCH:
+      processed_img = cv2.putText(image, Config.TOUCH_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
+                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    
     return processed_img
 
   def set_touch_state(self):

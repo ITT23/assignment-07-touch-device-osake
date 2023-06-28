@@ -14,6 +14,9 @@ class Config:
 
   IP = "127.0.0.1"
 
+  CALIBRATION_THRESHOLD = 150
+  CALIBRATION_THRESHOLD_ACCEPTANCE = 120
+
   # calibration text attributes
     # font
   FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -30,8 +33,11 @@ class Config:
   START_HOVER_CALIBRATION_TEXT_3 = "The finger should only touch the display with the fingernail."
   START_HOVER_CALIBRATION_TEXT_4 = "Then press the 'c' key to start the calibration."
 
-  START_TOUCH_CALIBRATION_TEXT_1 = "NEXT, the calibration for hover takes place." 
+  START_TOUCH_CALIBRATION_TEXT_1 = "NEXT, the calibration for touch takes place." 
   START_TOUCH_CALIBRATION_TEXT_2 = "Position your index finger in the middle of the touch display."
   START_TOUCH_CALIBRATION_TEXT_3 = "The finger should touch the display with the fingertip."
   START_TOUCH_CALIBRATION_TEXT_4 = "(clearly distinguishable from hovering)"
   START_TOUCH_CALIBRATION_TEXT_5 = "Then press the 'c' key to start the calibration."
+
+  HOVER_CALIBRATION_TEXT = "Draw around with your fingernail (maintain contact)."
+  TOUCH_CALIBRATION_TEXT = "Draw around with your fingertip (maintain contact)."
