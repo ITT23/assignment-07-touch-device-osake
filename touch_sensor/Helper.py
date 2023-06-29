@@ -167,13 +167,8 @@ class Image_Processor:
     contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours_hover, _ = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
       
-    if self.state == CalibrationState.HOVER:
-      self.interaction = Interaction.HOVER
-    elif self.state == CalibrationState.TOUCH:
-      self.interaction = Interaction.TOUCH
-    else:
-      # check if it was a touch or hover and adjust corresponding values
-      self.set_input_status(contours_touch, contours_hover)
+    # check if it was a touch or hover and adjust corresponding values
+    self.set_input_status(contours_touch, contours_hover)
 
     if self.interaction == Interaction.TOUCH:
       bounding_circle_radius = self.touch_radius
