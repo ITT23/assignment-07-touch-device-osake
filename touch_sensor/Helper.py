@@ -140,8 +140,8 @@ class Image_Processor:
     self.curr_dom_touch: list = []
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
-    self.cutoff_hover = 50
-    self.cutoff_touch = 50
+    self.cutoff_hover = 10
+    self.cutoff_touch = 10
   '''
   def apply_calibration_cutoff(self, calibration:dict):
     # cutoffs for touch and hover
@@ -170,6 +170,7 @@ class Image_Processor:
     # check if it was a touch or hover and adjust corresponding values
     self.set_input_status(contours_touch, contours_hover)
 
+    
     if self.interaction == Interaction.TOUCH:
       bounding_circle_radius = self.touch_radius
       bounding_circle_color = Config.COLOR_TOUCH
@@ -179,6 +180,8 @@ class Image_Processor:
       bounding_circle_radius = self.hover_radius
       bounding_circle_color = Config.COLOR_HOVER
       area_contours_clustered = self.get_clustered_points(contours_hover)
+    
+      
 
     # convert back to colored img to see the touch areas
     img_bgr = cv2.cvtColor(img_gray, cv2.COLOR_BAYER_BG2BGR)
@@ -296,7 +299,7 @@ class Calibration:
   # After 150 evaluated images (approx. 5 seconds) it is checked whether 130 times the correct recognition was made.
   def calibrate_cutoff(self):
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
-      if self.image_processor.interaction == Interaction.NONE:
+      if self.image_processor.interaction == Interaction.NONE or self.image_processor.points_number > 1:
         if self.state == CalibrationState.HOVER:
           self.image_processor.cutoff_hover += 1
           print("no hover")
@@ -309,10 +312,12 @@ class Calibration:
           #self.cutoff_touch += 3
         self.detection_outcome.append(0)
       else:
-        if self.image_processor.points_number < 2:
+        
+        if self.state == CalibrationState.HOVER and self.image_processor.interaction == Interaction.HOVER:
           self.detection_outcome.append(1)
-        else:
-          self.detection_outcome.append(0)
+        elif self.state == CalibrationState.TOUCH and self.image_processor.interaction == Interaction.TOUCH:
+          self.detection_outcome.append(1)
+        
       #print(len(self.detection_outcome))
       if len(self.detection_outcome) >= Config.CALIBRATION_THRESHOLD: # 150
         if self.detection_outcome.count(1) >= Config.CALIBRATION_THRESHOLD_ACCEPTANCE: # 130
