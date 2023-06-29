@@ -166,7 +166,7 @@ class Image_Processor:
     # get contours for hover and touch (if available)
     contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours_hover, _ = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-      
+    
     # check if it was a touch or hover and adjust corresponding values
     self.set_input_status(contours_touch, contours_hover)
 
