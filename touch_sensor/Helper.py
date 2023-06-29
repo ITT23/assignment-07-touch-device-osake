@@ -306,7 +306,8 @@ class Calibration:
       self.active = True
       # in case you can restart the calibration process
       self.state = CalibrationState.TOUCH_INFO
-      
+  
+  #https://www.appsloveworld.com/opencv/100/3/how-to-resize-text-for-cv2-puttext-according-to-the-image-size-in-opencv-python
   def get_optimal_font_scale(self, text):
     fontScale = 3*(self.image_processor.frame.shape[1]//6)
     for scale in reversed(range(0, 60, 1)):
