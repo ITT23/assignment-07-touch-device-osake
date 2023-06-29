@@ -120,12 +120,13 @@ class Output:
 class Image_Processor:
 
   KERNEL_SIZE = 20
-  CUTOFF = 45
+  #CUTOFF = 45
   MAX_BOXES = 2
-  TOUCH_HOVER_CUTOFF = 850
+  #TOUCH_HOVER_CUTOFF = 850
 
   def __init__(self, video_dimensions: tuple):
     self.frame = None
+    self.state = None
     self._video_dimensions = video_dimensions
     self.touch_radius = video_dimensions[0] // Config.TOUCH_DISPLAY_RADIUS
     self.hover_radius = video_dimensions[0] // Config.HOVER_DISPLAY_RADIUS
@@ -139,11 +140,14 @@ class Image_Processor:
     self.curr_dom_touch: list = []
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
-
+    self.cutoff_hover = 50
+    self.cutoff_touch = 50
+  '''
   def apply_calibration_cutoff(self, calibration:dict):
     # cutoffs for touch and hover
     self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
     self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
+  '''
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
@@ -162,9 +166,14 @@ class Image_Processor:
     # get contours for hover and touch (if available)
     contours_touch, _ = cv2.findContours(thresh_touch, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours_hover, _ = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # check if it was a touch or hover and adjust corresponding values
-    self.set_input_status(contours_touch, contours_hover)
+      
+    if self.state == CalibrationState.HOVER:
+      self.interaction = Interaction.HOVER
+    elif self.state == CalibrationState.TOUCH:
+      self.interaction = Interaction.TOUCH
+    else:
+      # check if it was a touch or hover and adjust corresponding values
+      self.set_input_status(contours_touch, contours_hover)
 
     if self.interaction == Interaction.TOUCH:
       bounding_circle_radius = self.touch_radius
@@ -274,8 +283,8 @@ class Calibration:
     self.active = False
     self.info_txt_pos = ()
     self.state = CalibrationState.HOVER_INFO
-    self.cutoff_hover = 10
-    self.cutoff_touch = 10
+    #self.cutoff_hover = 50
+    #self.cutoff_touch = 50
     self.detection_outcome:list = []
     
   def set_status(self):
@@ -294,29 +303,40 @@ class Calibration:
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
       if self.image_processor.interaction == Interaction.NONE:
         if self.state == CalibrationState.HOVER:
-          self.cutoff_hover += 1
-        else:
-          self.cutoff_touch += 1
+          self.image_processor.cutoff_hover += 1
+          print("no hover")
+          #self.cutoff_hover += 3
+          #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
+        if self.state == CalibrationState.TOUCH:
+          self.image_processor.cutoff_touch += 1
+          print('no touch')
+          #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
+          #self.cutoff_touch += 3
         self.detection_outcome.append(0)
       else:
         if self.image_processor.points_number < 2:
           self.detection_outcome.append(1)
         else:
           self.detection_outcome.append(0)
-      print(len(self.detection_outcome))
+      #print(len(self.detection_outcome))
       if len(self.detection_outcome) >= Config.CALIBRATION_THRESHOLD: # 150
         if self.detection_outcome.count(1) >= Config.CALIBRATION_THRESHOLD_ACCEPTANCE: # 130
-          if self.state.HOVER:
+          if self.state == CalibrationState.HOVER:
+            self.image_processor.state = None
             self.state = CalibrationState.TOUCH_INFO
             self.detection_outcome = []
-            print("Calculated Hover Cutoff is" + str(self.cutoff_hover))
-          elif self.state.TOUCH:
+            print('Hover Success - Array Length: ' + str(len(self.detection_outcome)))
+            print("Calculated Hover Cutoff is" + str(self.image_processor.cutoff_hover))
+          if self.state == CalibrationState.TOUCH:
             self.state = CalibrationState.FINISHED
+            self.image_processor.state = None
             self.detection_outcome = []
+            print('Touch Success - Array Length: ' + str(len(self.detection_outcome)))
             self.active = False
-            print("Calculated Touch Cutoff is " + str(self.cutoff_touch))
+            print("Calculated Touch Cutoff is " + str(self.image_processor.cutoff_touch))
         else:
           self.detection_outcome = []
+          print('Failded - Array Length: ' + str(len(self.detection_outcome)))
 
 
   def set_info_txt(self, image:Image):

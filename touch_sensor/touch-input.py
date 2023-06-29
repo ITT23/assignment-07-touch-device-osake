@@ -48,11 +48,12 @@ class Application:
     self._video_dimensions = (self.capture.width, self.capture.height)
     self.image_processor = Image_Processor(video_dimensions=self._video_dimensions)
     self.calibration_proc = Calibration(self.capture, self.image_processor)
-
+    '''
     self.calibration = {
       "CUTOFF_TOUCH": 0,
       "CUTOFF_HOVER": 0,
     }
+    '''
 
     ### load calibration values
     if self.state == AppState.CALIBRATION:
@@ -60,7 +61,7 @@ class Application:
       #TODO: exit app after calibrating
 
     else:
-      self._load_calibration_values()
+      #self._load_calibration_values()
       self.calibration_proc.set_status()
 
     if self.video_path is not None:
@@ -68,7 +69,7 @@ class Application:
       if not os.path.exists(path):
         raise Exception("provided path to videos does not exist")
 
-    self.image_processor.apply_calibration_cutoff(calibration=self.calibration)
+    #self.image_processor.apply_calibration_cutoff(calibration=self.calibration)
     self.sender = DIPPID_Sender(self.dippid_port)   
 
     self.running = True
@@ -77,7 +78,7 @@ class Application:
     #print("NYI")#TODO
     #pass
     self.calibration_proc.set_status()
-
+  '''
   def _load_calibration_values(self) -> None:
     with open(self.CALIBRATION_FILE, "r") as f:
       content = f.read().split("\n")
@@ -86,6 +87,7 @@ class Application:
         name, value = line.split(" ")
 
         self.calibration[name] = value
+  '''
 
   def run(self) -> None:
     while self.running:
@@ -104,11 +106,11 @@ class Application:
         #print(f"processing time for this frame was {t2-t1} seconds.")
 
       # add calibration info to the image (if calibration active)
-      if self.calibration_proc.active:
+      if self.calibration_proc.active == True:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
       
-      if self.state is not AppState.DEFAULT and self.calibration_proc.active:
+      if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
         self.capture.show_frame(processed_img)
       
       if success:
@@ -121,11 +123,13 @@ class Application:
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
-      elif cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active:
+      if cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active:
         if self.calibration_proc.state == CalibrationState.HOVER_INFO:
           self.calibration_proc.state = CalibrationState.HOVER
-        elif self.calibration_proc.state == CalibrationState.TOUCH_INFO:
+          self.image_processor.state = CalibrationState.HOVER
+        if self.calibration_proc.state == CalibrationState.TOUCH_INFO:
           self.calibration_proc.state = CalibrationState.TOUCH
+          self.image_processor.state = CalibrationState.TOUCH
 
       if self.eps > 0:
         time.sleep(self.eps)
@@ -144,7 +148,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default="../assets/gestures/random_hover_and_touch.mp4", type=str, help="relative path to video record")
+  group.add_argument("--video_path", default=None, type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
