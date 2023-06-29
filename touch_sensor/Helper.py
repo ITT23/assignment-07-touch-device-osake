@@ -141,7 +141,7 @@ class Image_Processor:
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
     self.cutoff_hover = 10
-    self.cutoff_touch = 10
+    self.cutoff_touch = 20
   '''
   def apply_calibration_cutoff(self, calibration:dict):
     # cutoffs for touch and hover
