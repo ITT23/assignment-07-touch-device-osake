@@ -113,9 +113,9 @@ class Application:
       if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
         self.capture.show_frame(processed_img)
       
-      if success:
+      if success and self.calibration_proc.active == False:
         pass
-        #self.sender.send_event(output, self.state)
+        self.sender.send_event(output, self.state)
 
       # Wait for a key press and check if it's the 'q' key
       # just for testing purposes, but later it could init a new calibration process

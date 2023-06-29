@@ -8,8 +8,8 @@ class AppState(Enum):
 class CalibrationState(Enum):
   HOVER_INFO = 0
   HOVER = 1
-  TOUCH_INFO = 2
-  TOUCH = 3
+  TOUCH_INFO = 3
+  TOUCH = 2
   FINISHED = 4
 
 class Interaction(Enum):

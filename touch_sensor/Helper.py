@@ -292,7 +292,7 @@ class Calibration:
     else:
       self.active = True
       # in case you can restart the calibration process
-      self.state = CalibrationState.HOVER_INFO
+      self.state = CalibrationState.TOUCH_INFO
 
   # If no finger was detected, the associated cutoff value is increased by 1. The result is stored in the detection_outcome array. 
   # If the finger is recognized and no more than 1 finger is recognized, the value 1 is added to the array. Otherwise 0. 
@@ -300,40 +300,38 @@ class Calibration:
   def calibrate_cutoff(self):
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
       if self.image_processor.interaction == Interaction.NONE or self.image_processor.points_number > 1:
-        if self.state == CalibrationState.HOVER:
-          self.image_processor.cutoff_hover += 1
-          print("no hover")
-          #self.cutoff_hover += 3
-          #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
         if self.state == CalibrationState.TOUCH:
           self.image_processor.cutoff_touch += 1
-          print('no touch')
+          #print("no hover")
+          #self.cutoff_hover += 3
+          #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
+        if self.state == CalibrationState.HOVER:
+          self.image_processor.cutoff_hover += 1
+          #print('no touch')
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
           #self.cutoff_touch += 3
         self.detection_outcome.append(0)
       else:
         
-        if self.state == CalibrationState.HOVER and self.image_processor.interaction == Interaction.HOVER:
-          self.detection_outcome.append(1)
-        elif self.state == CalibrationState.TOUCH and self.image_processor.interaction == Interaction.TOUCH:
+        if self.state.value == self.image_processor.interaction.value:
           self.detection_outcome.append(1)
         
       #print(len(self.detection_outcome))
       if len(self.detection_outcome) >= Config.CALIBRATION_THRESHOLD: # 150
         if self.detection_outcome.count(1) >= Config.CALIBRATION_THRESHOLD_ACCEPTANCE: # 130
-          if self.state == CalibrationState.HOVER:
-            self.image_processor.state = None
-            self.state = CalibrationState.TOUCH_INFO
-            self.detection_outcome = []
-            print('Hover Success - Array Length: ' + str(len(self.detection_outcome)))
-            print("Calculated Hover Cutoff is" + str(self.image_processor.cutoff_hover))
           if self.state == CalibrationState.TOUCH:
+            self.image_processor.state = None
+            self.state = CalibrationState.HOVER_INFO
+            self.detection_outcome = []
+            #print('Hover Success - Array Length: ' + str(len(self.detection_outcome)))
+            print("Calculated Touch Cutoff is" + str(self.image_processor.cutoff_hover))
+          if self.state == CalibrationState.HOVER:
             self.state = CalibrationState.FINISHED
             self.image_processor.state = None
             self.detection_outcome = []
-            print('Touch Success - Array Length: ' + str(len(self.detection_outcome)))
+            #print('Touch Success - Array Length: ' + str(len(self.detection_outcome)))
             self.active = False
-            print("Calculated Touch Cutoff is " + str(self.image_processor.cutoff_touch))
+            print("Calculated Hover Cutoff is " + str(self.image_processor.cutoff_touch))
         else:
           self.detection_outcome = []
           print('Failded - Array Length: ' + str(len(self.detection_outcome)))
