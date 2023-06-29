@@ -110,7 +110,7 @@ class Application:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
       
-      if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
+      if self.state is not AppState.DEFAULT:
         self.capture.show_frame(processed_img)
       
       if success and self.calibration_proc.active == False:

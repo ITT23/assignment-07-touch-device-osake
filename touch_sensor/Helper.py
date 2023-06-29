@@ -94,6 +94,7 @@ class Output:
         event["events"]["0"]["type"] = Interaction.HOVER.name.lower()
 
     if self.num_finger == 2:
+      x, y = self.coordinates[0]
       x_2, y_2 = self.coordinates[1]
 
       event["events"]["0"] = {}
@@ -148,6 +149,18 @@ class Image_Processor:
     self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
     self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
   '''
+  
+  def get_cutoff_hover(self):
+    return self.cutoff_hover
+  
+  def get_cutoff_touch(self):
+    return self.cutoff_touch
+  
+  def increase_cutoff(self, input_state:str):
+    if input_state == "touch":
+      self.cutoff_touch += 1
+    else:
+      self.cutoff_hover += 1
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
@@ -301,12 +314,16 @@ class Calibration:
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
       if self.image_processor.interaction == Interaction.NONE or self.image_processor.points_number > 1:
         if self.state == CalibrationState.TOUCH:
-          self.image_processor.cutoff_touch += 1
+          #self.image_processor.cutoff_touch += 1
+          self.image_processor.increase_cutoff("touch")
+          print(self.image_processor.cutoff_touch)
           #print("no hover")
           #self.cutoff_hover += 3
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
         if self.state == CalibrationState.HOVER:
-          self.image_processor.cutoff_hover += 1
+          #self.image_processor.cutoff_hover += 1
+          self.image_processor.increase_cutoff("hover")
+          print(self.image_processor.cutoff_hover)
           #print('no touch')
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
           #self.cutoff_touch += 3
@@ -335,6 +352,11 @@ class Calibration:
         else:
           self.detection_outcome = []
           print('Failded - Array Length: ' + str(len(self.detection_outcome)))
+          
+      print(self.image_processor.cutoff_hover)
+      print(self.image_processor.cutoff_touch)
+      print(self.image_processor.get_cutoff_hover())
+      print(self.image_processor.get_cutoff_touch())
 
 
   def set_info_txt(self, image:Image):
