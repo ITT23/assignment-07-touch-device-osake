@@ -1,7 +1,9 @@
 from enum import Enum
+import math
 
-from pyglet import image
-from PIL import Image as PILImage
+from pyglet import image, sprite
+
+from Config import Config
 
 
 class SCALE_DIRECTION(Enum):
@@ -22,53 +24,26 @@ class Image:
   #   rotate images with a two-finger gesture
   #   scale images with a two-finger gesture
 
-  #dont move out of the window, must be within the window
-  #also watch for scale
-  '''
-  raw_img = Image.fromarray(img).tobytes()
 
-      top_to_bottom_flag = -1
-      bytes_per_row = channels * cols
-      pyimg = pyglet.image.ImageData(width=cols, 
-                                    height=rows, 
-                                    fmt=fmt, 
-                                    data=raw_img, 
-                                    pitch=top_to_bottom_flag * bytes_per_row)
+  def __init__(self, index: int, image_path: str, window_dimensions: tuple[int, int]) -> None:
+    self._index = index
+    self._window_dimensions = window_dimensions
+    self._image_data = image.load(image_path)
+    self._image = sprite.Sprite(self._image_data, 0,0,0)
+    
+    self.init_positions()
 
-      return pyimg
-  '''
-  SCALE_MULTIPLYER = 3 #TODO: change this later
-  ROTATION_STEP = 10
+    self._last_distance = 1
 
-  def __init__(self, image_path: str, window_dimensions: tuple[int, int]) -> None:
-    self._original_image = PILImage.open(image_path, "r")
-    self._original_image = self._original_image.convert('RGBA')
+  def init_positions(self) -> None:
+    self._image.x = Config.IMAGE[self._index]["x"] * self._window_dimensions[0]
+    self._image.y = Config.IMAGE[self._index]["y"] * self._window_dimensions[1]
+    self._image.rotation = Config.IMAGE[self._index]["rotation"]
+    self._image.scale = (self._window_dimensions[0] * Config.IMAGE[self._index]["scale"]) / self._image.width
 
-    self._work_image = self._original_image.copy() #so that we can reset the image if needed
-    self._draw_image = self._convert_to_pyglet()
-
-    self.x = 0
-    self.y = 0
-
-    self.scale(SCALE_DIRECTION.SHRINK)
-    self.rotate(ROTATE_DIRECTION.LEFT)
-    self.move(50,50)
-
-  def _convert_to_pyglet(self) -> None:
-    rows, cols, channels = self._work_image.width, self._work_image.height, 4
-    image_data = self._work_image.tobytes()
-
-    pyimg = image.ImageData(width=rows, 
-                                  height=cols, 
-                                  fmt="RGBA", 
-                                  data=image_data, 
-                                  pitch=-1 * channels * rows)
-
-    return pyimg
-
-  def move(self, x: int, y: int) -> None:
-    self.x = x
-    self.y = y
+  def move(self, new_position: tuple[int, int]) -> None:
+    self._image.x = new_position[0]
+    self._image.y = new_position[1]
 
   #better work with rotation distance?
   def rotate(self, rotate_direction: ROTATE_DIRECTION) -> None:
@@ -85,21 +60,28 @@ class Image:
     self._work_image = self._work_image.rotate(rotation, expand=True)
     self._draw_image = self._convert_to_pyglet()
 
+  #call when a gesture is over so that scaling works correctly
+  def reset_last_distance(self) -> None:
+    self._last_distance = 1
+
   #we want to scale so that the ratio of the image stays intact
   #better work with pinch distance
-  def scale(self, scale_direction: SCALE_DIRECTION) -> None:
-    current_width, current_height = self._work_image.size
+  def scale(self, main_finger: tuple[int, int], help_finger: tuple[int, int]) -> None:
+    #scale image by double of distance
+    dy = (main_finger[1] - help_finger[1])
+    dx = (main_finger[0] - help_finger[0])
+    distance_fingers = math.sqrt(dy ** 2 + dx ** 2 )
 
-    scale_factor = 1
-    if scale_direction == scale_direction.GROW:
-      scale_factor = self.SCALE_MULTIPLYER
-    else:
-      scale_factor = 1 / self.SCALE_MULTIPLYER
+    diff_last_distance = distance_fingers - self._last_distance
+    self._last_distance = distance_fingers
 
-    new_dimensions = (int(current_width * scale_factor), int(current_height * scale_factor))
-
-    self._work_image = self._work_image.resize(new_dimensions)
-    self._draw_image = self._convert_to_pyglet()
+    #double scale because pintching normally only considers in one direction?
+    self._image.scale = diff_last_distance * 2
+    #scale
+    #move to main finger = mid
+    #because scaling starts from (0,0) we must adjust the midpoint
+    self._image.x = self._image.x - self._image.width / 2
+    self._image.y = self._image.y - self._image.height / 2
 
   def draw(self) -> None:
-    self._draw_image.blit(self.x, self.y)
+    self._image.draw()

@@ -69,10 +69,10 @@ class Application:
       raise Exception(f"{self.ASSET_FOLDER} is invalid directory")
 
     for *_, file_names in os.walk(self.ASSET_FOLDER):
-      for file_name in file_names:
+      for key, file_name in enumerate(file_names):
         image_path = os.path.join(self.ASSET_FOLDER, file_name)
 
-        self.images.append(Image(image_path, (self.width, self.height)))
+        self.images.append(Image(key, image_path, (self.width, self.height)))
 
   def _init_image_parameters(self) -> None:
     pass
