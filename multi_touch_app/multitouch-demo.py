@@ -9,11 +9,12 @@
 from argparse import ArgumentParser
 import os, time
 
-from pyglet import app, window
+from pyglet import app, window, image
 from pyglet.window import key
+from pyglet.image import ImageData
 
 from AppState import AppState
-
+from Image import Image
 
 CURR_DIR = os.path.dirname(__file__)
 
@@ -30,8 +31,8 @@ class Font:
 class Application:
 
   FPS = 1 / 60
-  DEBUG_WIDTH = 1450
-  DEBUG_HEIGTH = 900
+  DEBUG_WIDTH = 1280
+  DEBUG_HEIGHT = 720
   NAME = "Multitouch Demo"
 
   CURR_DIR = os.path.dirname(__file__)
@@ -46,7 +47,10 @@ class Application:
     if self.state == AppState.DEFAULT:
       self.window = window.Window(fullscreen=True, caption=self.NAME)
     else:
-      self.window = window.Window(width=self.DEBUG_WIDTH, height=self.DEBUG_HEIGTH, caption=self.NAME)
+      self.window = window.Window(width=self.DEBUG_WIDTH, height=self.DEBUG_HEIGHT, caption=self.NAME)
+
+    self.width = self.window.width
+    self.height = self.window.height
 
     self.on_draw = self.window.event(self.on_draw)
     self.on_key_release = self.window.event(self.on_key_release)
@@ -56,20 +60,31 @@ class Application:
     self.on_mouse_release = self.window.event(self.on_mouse_release)
     self.on_mouse_press = self.window.event(self.on_mouse_press)
 
+    self.images: list[Image] = []
     self._load_images()
+    self._init_image_parameters()
     
   def _load_images(self) -> None:
     if not os.path.exists(self.ASSET_FOLDER) or not os.path.isdir(self.ASSET_FOLDER):
       raise Exception(f"{self.ASSET_FOLDER} is invalid directory")
 
     for *_, file_names in os.walk(self.ASSET_FOLDER):
-      print(file_names)
+      for file_name in file_names:
+        image_path = os.path.join(self.ASSET_FOLDER, file_name)
+
+        self.images.append(Image(image_path, (self.width, self.height)))
+
+  def _init_image_parameters(self) -> None:
+    pass
 
   def run(self) -> None:
     app.run()
 
   def on_draw(self) -> None:
     self.window.clear()
+
+    for image in self.images:
+      image.draw()
 
     time.sleep(self.FPS)
 
