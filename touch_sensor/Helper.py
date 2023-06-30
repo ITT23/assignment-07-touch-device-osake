@@ -420,12 +420,14 @@ class Calibration:
     if self.state is CalibrationState.HOVER_INFO or self.state is CalibrationState.TOUCH_INFO:
       if self.state is CalibrationState.HOVER_INFO:
         info_text_arr:list = Config.START_HOVER_CALIBRATION_TEXT
+        font_scale = self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT[1])
       else:
         info_text_arr:list = Config.START_TOUCH_CALIBRATION_TEXT
+        font_scale = self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT[1])
       
       for i in range(len(info_text_arr)):
-        processed_img = cv2.putText(image, info_text_arr[i], (int(self.window_width * 0.2), int(self.window_height * 0.3)), \
-                                    Config.FONT, self.get_optimal_font_scale(info_text_arr[i]), Config.COLOR_INFO_TXT, \
+        processed_img = cv2.putText(image, info_text_arr[i], (int(self.window_width * 0.2), int(self.window_height * (0.3 + 0.1 * i))), \
+                                    Config.FONT, font_scale, Config.COLOR_INFO_TXT, \
                                       Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.HOVER:
       processed_img = cv2.putText(image, Config.HOVER_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, \
