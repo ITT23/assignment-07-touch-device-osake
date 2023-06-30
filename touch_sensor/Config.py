@@ -14,7 +14,7 @@ class Config:
 
   IP = "127.0.0.1"
 
-  CALIBRATION_THRESHOLD = 100
+  CALIBRATION_THRESHOLD = 50
   CALIBRATION_THRESHOLD_ACCEPTANCE = int(CALIBRATION_THRESHOLD * 0.9)
 
   # calibration text attributes
@@ -28,12 +28,12 @@ class Config:
   THICKNESS_INFO_TXT = 1
 
     # info text
-  START_HOVER_CALIBRATION_TEXT_1 = "First, the calibration for hover takes place." 
+  START_HOVER_CALIBRATION_TEXT_1 = "Next, the calibration for hover takes place." 
   START_HOVER_CALIBRATION_TEXT_2 = "Position your index finger in the middle of the touch display."
   START_HOVER_CALIBRATION_TEXT_3 = "The finger should only touch the display with the fingernail."
   START_HOVER_CALIBRATION_TEXT_4 = "Then press the 'c' key to start the calibration."
 
-  START_TOUCH_CALIBRATION_TEXT_1 = "NEXT, the calibration for touch takes place." 
+  START_TOUCH_CALIBRATION_TEXT_1 = "First, the calibration for touch takes place." 
   START_TOUCH_CALIBRATION_TEXT_2 = "Position your index finger in the middle of the touch display."
   START_TOUCH_CALIBRATION_TEXT_3 = "The finger should touch the display with the fingertip."
   START_TOUCH_CALIBRATION_TEXT_4 = "(clearly distinguishable from hovering)"

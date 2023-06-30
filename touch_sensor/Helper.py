@@ -141,7 +141,7 @@ class Image_Processor:
     self.curr_dom_touch: list = []
     # amount of input points 
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
-    self.cutoff_hover = 10
+    self.cutoff_hover = 20
     self.cutoff_touch = 20
   '''
   def apply_calibration_cutoff(self, calibration:dict):
@@ -161,6 +161,12 @@ class Image_Processor:
       self.cutoff_touch += 1
     else:
       self.cutoff_hover += 1
+
+  def decrease_cutoff(self, input_state:str):
+    if input_state == "touch":
+      self.cutoff_touch -= 1
+    else:
+      self.cutoff_hover -= 1
 
   # processes image whether it is touch or hover
   # returned image is cv2 format
@@ -189,11 +195,15 @@ class Image_Processor:
       bounding_circle_color = Config.COLOR_TOUCH
       area_contours_clustered = self.get_clustered_points(contours_touch)
 
+    elif self.interaction == Interaction.HOVER:
+      bounding_circle_radius = self.hover_radius
+      bounding_circle_color = Config.COLOR_HOVER
+      area_contours_clustered = self.get_clustered_points(contours_hover)
+
     else:
       bounding_circle_radius = self.hover_radius
       bounding_circle_color = Config.COLOR_HOVER
       area_contours_clustered = self.get_clustered_points(contours_hover)
-    
       
 
     # convert back to colored img to see the touch areas
@@ -314,7 +324,7 @@ class Calibration:
         textSize = cv2.getTextSize(text, fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=scale/10, thickness=1)
         new_width = textSize[0][0]
         if (new_width <= fontScale):
-            return scale/10
+            return scale/7
     return 1
 
   # If no finger was detected, the associated cutoff value is increased by 1. The result is stored in the detection_outcome array. 
@@ -322,23 +332,30 @@ class Calibration:
   # After 150 evaluated images (approx. 5 seconds) it is checked whether 130 times the correct recognition was made.
   def calibrate_cutoff(self):
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
-      if self.image_processor.interaction == Interaction.NONE or self.image_processor.points_number > 1:
-        if self.state == CalibrationState.TOUCH:
+      if self.image_processor.interaction == Interaction.NONE:
+        if self.state == CalibrationState.TOUCH and self.image_processor.cutoff_touch < 30:
           #self.image_processor.cutoff_touch += 1
+          #if not self.image_processor.points_number > 1:
           self.image_processor.increase_cutoff("touch")
-          print(self.image_processor.cutoff_touch)
+          #print(self.image_processor.cutoff_touch)
           #print("no hover")
           #self.cutoff_hover += 3
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
-        if self.state == CalibrationState.HOVER:
+        if self.state == CalibrationState.HOVER and self.image_processor.cutoff_touch < 45:
           #self.image_processor.cutoff_hover += 1
           self.image_processor.increase_cutoff("hover")
-          print(self.image_processor.cutoff_hover)
+          #print(self.image_processor.cutoff_hover)
           #print('no touch')
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
           #self.cutoff_touch += 3
         self.detection_outcome.append(0)
       else:
+
+        if self.image_processor.points_number > 1:
+          if self.state == CalibrationState.TOUCH:
+            self.image_processor.decrease_cutoff("touch")
+          else:
+            self.image_processor.decrease_cutoff("hover")
         
         if self.state.value == self.image_processor.interaction.value:
           self.detection_outcome.append(1)
@@ -363,32 +380,30 @@ class Calibration:
           self.detection_outcome = []
           print('Failded - Array Length: ' + str(len(self.detection_outcome)))
           
-      print(self.image_processor.cutoff_hover)
-      print(self.image_processor.cutoff_touch)
-      print(self.image_processor.get_cutoff_hover())
-      print(self.image_processor.get_cutoff_touch())
+    print(self.image_processor.cutoff_hover)
+    print(self.image_processor.cutoff_touch)
 
 
   def set_info_txt(self, image:Image):
     if self.state is CalibrationState.HOVER_INFO:
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_1, (int(self.window_width * 0.1), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_1, (int(self.window_width * 0.2), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_2, (int(self.window_width * 0.1), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_2, (int(self.window_width * 0.2), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_3, (int(self.window_width * 0.1), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_3, (int(self.window_width * 0.2), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_4, (int(self.window_width * 0.1), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_4, (int(self.window_width * 0.2), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.TOUCH_INFO:
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_1, (int(self.window_width * 0.1), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_1, (int(self.window_width * 0.2), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_2, (int(self.window_width * 0.1), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_2, (int(self.window_width * 0.2), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_3, (int(self.window_width * 0.1), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_3, (int(self.window_width * 0.2), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_4, (int(self.window_width * 0.1), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_4, (int(self.window_width * 0.2), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_5, (int(self.window_width * 0.1), int(self.window_height * 0.7)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
+      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_5, (int(self.window_width * 0.2), int(self.window_height * 0.7)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.HOVER:
       processed_img = cv2.putText(image, Config.HOVER_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
@@ -398,9 +413,6 @@ class Calibration:
                                 Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     
     return processed_img
-
-  def set_touch_state(self):
-    self.state = CalibrationState.TOUCH
 
 class DIPPID_Sender:
 
