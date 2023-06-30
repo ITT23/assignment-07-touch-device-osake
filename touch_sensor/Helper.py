@@ -10,6 +10,7 @@ from Clustering import Clustering
 from AppState import AppState, Interaction, CalibrationState
 from Config import Config
 from typing import Union
+from collections import deque
 
 
 # convert cv2 image format to pyglet image format
@@ -138,6 +139,8 @@ class Image_Processor:
     self.clustering = Clustering()
     # last coordinates for the input points
     self.last_fing_tip_coordinates: list(tuple) = []
+
+    self.last_actions = deque([None])
     # current dominant fingertip touch
     self.curr_dom_touch: list = []
     # amount of input points 
@@ -194,16 +197,30 @@ class Image_Processor:
       bounding_circle_radius = self.touch_radius
       bounding_circle_color = Config.COLOR_TOUCH
       area_contours_clustered = self.get_clustered_points(contours_touch)
+      if self.state == None:
+        self.last_actions.append(area_contours_clustered)
+        self.pop_last_actions()
 
     elif self.interaction == Interaction.HOVER:
       bounding_circle_radius = self.hover_radius
       bounding_circle_color = Config.COLOR_HOVER
       area_contours_clustered = self.get_clustered_points(contours_hover)
+      if self.state == None:
+        self.last_actions.append(area_contours_clustered)
+        self.pop_last_actions()
 
     else:
       bounding_circle_radius = self.hover_radius
       bounding_circle_color = Config.COLOR_HOVER
-      area_contours_clustered = self.get_clustered_points(contours_hover)
+      if self.state == None:
+        self.last_actions.append(None)
+        self.pop_last_actions()
+        if self.last_actions[0] is not None:
+          area_contours_clustered = self.last_actions[0]
+        else:
+          area_contours_clustered = self.get_clustered_points(contours_hover)
+      else:
+        area_contours_clustered = self.get_clustered_points(contours_hover)
       
 
     # convert back to colored img to see the touch areas
@@ -294,6 +311,10 @@ class Image_Processor:
         if self.frame is not None:
             img = cv2glet(self.frame, 'BGR')
         return img 
+  
+  def pop_last_actions(self):
+    if len(self.last_actions) >= 5:
+          self.last_actions.popleft()
   
 class Calibration:
   

@@ -3,7 +3,8 @@ TODO:
 
 '''
 import time, os
-import pyglet
+import keyboard 
+
 from argparse import ArgumentParser, ArgumentTypeError
 
 import cv2
@@ -92,7 +93,8 @@ class Application:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
 
-      
+      if self.calibration_proc.active == False:
+        cv2.destroyAllWindows()
       
       if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
         self.capture.show_frame(processed_img)
@@ -103,11 +105,28 @@ class Application:
 
       # Wait for a key press and check if it's the 'q' key
       # just for testing purposes, but later it could init a new calibration process
+      '''
       if cv2.waitKey(1) & 0xff == ord('q'):
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
-      if cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active:
+      '''
+      
+      
+      if keyboard.is_pressed('c') and self.calibration_proc.active == False:
+        self.calibration_proc.set_status()
+
+      if keyboard.is_pressed('q') and self.calibration_proc.active == False:
+        self.running = False
+        self.capture.release()
+        cv2.destroyAllWindows()
+
+      if cv2.waitKey(1) & 0xff == ord('q'):
+        self.running = False
+        self.capture.release()
+        cv2.destroyAllWindows()
+
+      if cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active == True:
         if self.calibration_proc.state == CalibrationState.HOVER_INFO:
           self.calibration_proc.state = CalibrationState.HOVER
           self.image_processor.state = CalibrationState.HOVER
@@ -117,8 +136,6 @@ class Application:
 
       if self.eps > 0:
         time.sleep(self.eps)
-
-      time.sleep(0.01)
 
 
 def check_eps_value(value: int) -> str:
