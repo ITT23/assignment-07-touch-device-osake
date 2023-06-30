@@ -27,17 +27,14 @@ class Config:
     # Line thickness 
   THICKNESS_INFO_TXT = 1
 
-    # info text
-  START_HOVER_CALIBRATION_TEXT_1 = "Next, the calibration for hover takes place." 
-  START_HOVER_CALIBRATION_TEXT_2 = "Position your index finger in the middle of the touch display."
-  START_HOVER_CALIBRATION_TEXT_3 = "The finger should only touch the display with the fingernail."
-  START_HOVER_CALIBRATION_TEXT_4 = "Then press the 'c' key to start the calibration."
-
-  START_TOUCH_CALIBRATION_TEXT_1 = "First, the calibration for touch takes place." 
-  START_TOUCH_CALIBRATION_TEXT_2 = "Position your index finger in the middle of the touch display."
-  START_TOUCH_CALIBRATION_TEXT_3 = "The finger should touch the display with the fingertip."
-  START_TOUCH_CALIBRATION_TEXT_4 = "(clearly distinguishable from hovering)"
-  START_TOUCH_CALIBRATION_TEXT_5 = "Then press the 'c' key to start the calibration."
+    # calibration text
+  # touch calibration 
+  START_TOUCH_CALIBRATION_TEXT:list = ["First, the calibration for touch takes place.", "Position your index finger in the middle of the touch display.", \
+                                 "The finger should touch the display with the fingertip.", "(clearly distinguishable from hovering)", \
+                                  "Then press the 'c' key to start the calibration."]
+  # hover calibration
+  START_HOVER_CALIBRATION_TEXT:list = ["Next, the calibration for hover takes place.", "Position your index finger in the middle of the touch display.", \
+                                 "The finger should only touch the display with the fingernail.", "Then press the 'c' key to start the calibration."]
 
   HOVER_CALIBRATION_TEXT = "Draw around with your fingernail (maintain contact)."
   TOUCH_CALIBRATION_TEXT = "Draw around with your fingertip (maintain contact)."

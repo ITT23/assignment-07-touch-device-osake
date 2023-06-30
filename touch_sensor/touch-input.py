@@ -2,20 +2,13 @@
 TODO:
 
 '''
-import time, os
-import keyboard 
+import time, os, keyboard, cv2
 
 from argparse import ArgumentParser, ArgumentTypeError
-
-import cv2
-
-from os import path
 
 from Helper import Image_Processor, DIPPID_Sender, Capture, Calibration
 from AppState import AppState, CalibrationState
 
-#CURR_DIR = path.dirname(__file__)
-#RECORDED_SESSION = path.join(CURR_DIR, "../assets/gestures/check_hover_1.mp4")
 
 class Application:
 
@@ -45,7 +38,7 @@ class Application:
 
     else:
       self._load_calibration_values()
-      self.calibration_proc.set_status()
+      #self.calibration_proc.set_status()
 
     if self.video_path is not None:
       path = os.path.join(self.CURR_DIR, self.video_path)
@@ -153,8 +146,12 @@ if __name__ == "__main__":
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
-  parser.add_argument("-s", default="default", type=str, choices=[state.name.lower() for state in AppState], help="enable debug mode: print DIPPID formated data to terminal instead of sending it to dgram server; enable calibration mode: terminates the cutoff values for hover and touch events which are saved to file; default: start sending touch events to dgram server")
-  parser.add_argument("-e", default=-1, type=int, help="determine maximal events per seconds. provide an integer like 4 -> 1/4 events per second. per default runs with maximum eps (eps==-1).")
+  parser.add_argument("-s", default="default", type=str, choices=[state.name.lower() for state in AppState], \
+                      help="enable debug mode: print DIPPID formated data to terminal instead of sending it to dgram server; \
+                        enable calibration mode: terminates the cutoff values for hover and touch events which are saved to file; \
+                          default: start sending touch events to dgram server")
+  parser.add_argument("-e", default=-1, type=int, help="determine maximal events per seconds. provide an integer like 4 -> 1/4 events per second. \
+                      per default runs with maximum eps (eps==-1).")
 
   args = parser.parse_args()
 

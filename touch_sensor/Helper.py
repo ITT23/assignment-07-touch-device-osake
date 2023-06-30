@@ -417,32 +417,22 @@ class Calibration:
 
 
   def set_info_txt(self, image:Image):
-    if self.state is CalibrationState.HOVER_INFO:
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_1, (int(self.window_width * 0.2), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_2, (int(self.window_width * 0.2), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_3, (int(self.window_width * 0.2), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_HOVER_CALIBRATION_TEXT_4, (int(self.window_width * 0.2), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_HOVER_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-    elif self.state is CalibrationState.TOUCH_INFO:
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_1, (int(self.window_width * 0.2), int(self.window_height * 0.3)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_2, (int(self.window_width * 0.2), int(self.window_height * 0.4)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_3, (int(self.window_width * 0.2), int(self.window_height * 0.5)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_4, (int(self.window_width * 0.2), int(self.window_height * 0.6)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
-      processed_img = cv2.putText(image, Config.START_TOUCH_CALIBRATION_TEXT_5, (int(self.window_width * 0.2), int(self.window_height * 0.7)), Config.FONT, self.get_optimal_font_scale(Config.START_TOUCH_CALIBRATION_TEXT_2), \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+    if self.state is CalibrationState.HOVER_INFO or self.state is CalibrationState.TOUCH_INFO:
+      if self.state is CalibrationState.HOVER_INFO:
+        info_text_arr:list = Config.START_HOVER_CALIBRATION_TEXT
+      else:
+        info_text_arr:list = Config.START_TOUCH_CALIBRATION_TEXT
+      
+      for i in range(len(info_text_arr)):
+        processed_img = cv2.putText(image, info_text_arr[i], (int(self.window_width * 0.2), int(self.window_height * 0.3)), \
+                                    Config.FONT, self.get_optimal_font_scale(info_text_arr[i]), Config.COLOR_INFO_TXT, \
+                                      Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.HOVER:
-      processed_img = cv2.putText(image, Config.HOVER_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.HOVER_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, \
+                                  self.get_optimal_font_scale(Config.HOVER_CALIBRATION_TEXT), Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.TOUCH:
-      processed_img = cv2.putText(image, Config.TOUCH_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, Config.FONT_SCALE_INFO_TXT, \
-                                Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+      processed_img = cv2.putText(image, Config.TOUCH_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, \
+                                  self.get_optimal_font_scale(Config.FONT_SCALE_INFO_TXT), Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     
     return processed_img
 
