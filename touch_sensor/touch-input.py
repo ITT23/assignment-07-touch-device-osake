@@ -1,23 +1,6 @@
 '''
 TODO:
-- nahebeieinanderliegende areas gruppieren 
-- Kalibrierung ausprobieren
-  -> Cutoff nachjustieren bis Wert erziehlt wird 
-  -> Zu Beginn soll der Kalibrierungsprozess stattfinden (user soll darüber informiert werden)
-            -> für cutoff und Lichtverhältnisse
-            -> Zwischen light und strong Touch (eventuell über die Größe der Area)
-- Flickern reduzieren (letzte Zustände speichern)
 
-HERE CALIBRATION PROCESS
-über pyglet
-
-nutzer sollen hovern solange bis was erkannt wird und vor allem flüssig hintereinander
--> sobald nicht erkannt wird soll cutoff +1 erhöht werden (von touch oder hover; je nachdem was grad kalibriert wird)
-das Gleiche für touch
-eventuell timer einbauen bevor kalibrierung beginnt, damit Nutzer Zeit haben den finger zu positionieren 
-(da sonst cutoff explodiert)
-
-sobald Kalibrierung beendet wird, soll pyglet schließen und der untere while Code tritt in Kraft (Anzeige des frames raus; dippid sender code das auskommentierte wieder rein)
 '''
 import time, os
 import pyglet
@@ -48,12 +31,11 @@ class Application:
     self._video_dimensions = (self.capture.width, self.capture.height)
     self.image_processor = Image_Processor(video_dimensions=self._video_dimensions)
     self.calibration_proc = Calibration(self.capture, self.image_processor)
-    '''
+    
     self.calibration = {
       "CUTOFF_TOUCH": 0,
       "CUTOFF_HOVER": 0,
     }
-    '''
 
     ### load calibration values
     if self.state == AppState.CALIBRATION:
@@ -61,7 +43,7 @@ class Application:
       #TODO: exit app after calibrating
 
     else:
-      #self._load_calibration_values()
+      self._load_calibration_values()
       self.calibration_proc.set_status()
 
     if self.video_path is not None:
@@ -78,7 +60,7 @@ class Application:
     #print("NYI")#TODO
     #pass
     self.calibration_proc.set_status()
-  '''
+  
   def _load_calibration_values(self) -> None:
     with open(self.CALIBRATION_FILE, "r") as f:
       content = f.read().split("\n")
@@ -87,7 +69,7 @@ class Application:
         name, value = line.split(" ")
 
         self.calibration[name] = value
-  '''
+    self.image_processor.apply_calibration_cutoff(self.calibration)
 
   def run(self) -> None:
     while self.running:
@@ -109,12 +91,14 @@ class Application:
       if self.calibration_proc.active == True:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
+
       
-      if self.state is not AppState.DEFAULT:
+      
+      if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
         self.capture.show_frame(processed_img)
       
       if success and self.calibration_proc.active == False:
-        pass
+        #pass
         self.sender.send_event(output, self.state)
 
       # Wait for a key press and check if it's the 'q' key

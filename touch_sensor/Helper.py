@@ -2,6 +2,7 @@ import socket, json
 import cv2
 import numpy as np
 import pyglet
+import os
 
 from PIL import Image
 from cv2 import Mat
@@ -143,12 +144,11 @@ class Image_Processor:
     self.points_number = 0 # if 1 finger is touching/hovering it becomes 1 and with 2 fingers it becomes 2 //better use enum?
     self.cutoff_hover = 20
     self.cutoff_touch = 20
-  '''
+  
   def apply_calibration_cutoff(self, calibration:dict):
     # cutoffs for touch and hover
     self.cutoff_touch = int(calibration["CUTOFF_TOUCH"])
     self.cutoff_hover = int(calibration["CUTOFF_HOVER"])
-  '''
   
   def get_cutoff_hover(self):
     return self.cutoff_hover
@@ -316,16 +316,6 @@ class Calibration:
       self.active = True
       # in case you can restart the calibration process
       self.state = CalibrationState.TOUCH_INFO
-  
-  #https://www.appsloveworld.com/opencv/100/3/how-to-resize-text-for-cv2-puttext-according-to-the-image-size-in-opencv-python
-  def get_optimal_font_scale(self, text):
-    fontScale = 3*(self.image_processor.frame.shape[1]//6)
-    for scale in reversed(range(0, 60, 1)):
-        textSize = cv2.getTextSize(text, fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=scale/10, thickness=1)
-        new_width = textSize[0][0]
-        if (new_width <= fontScale):
-            return scale/7
-    return 1
 
   # If no finger was detected, the associated cutoff value is increased by 1. The result is stored in the detection_outcome array. 
   # If the finger is recognized and no more than 1 finger is recognized, the value 1 is added to the array. Otherwise 0. 
@@ -376,12 +366,33 @@ class Calibration:
             #print('Touch Success - Array Length: ' + str(len(self.detection_outcome)))
             self.active = False
             print("Calculated Hover Cutoff is " + str(self.image_processor.cutoff_touch))
+            self.save_calibration_data()
+
         else:
           self.detection_outcome = []
           print('Failded - Array Length: ' + str(len(self.detection_outcome)))
           
     print(self.image_processor.cutoff_hover)
     print(self.image_processor.cutoff_touch)
+
+  def save_calibration_data(self):
+    CURR_DIR = os.path.dirname(__file__)
+    CALIBRATION_FILE = os.path.join(CURR_DIR, "calibration.txt")
+
+    with open('calibration.txt', 'w') as f:
+      f.write('CUTOFF_TOUCH ' + str(self.image_processor.cutoff_touch))
+      f.write('\n')
+      f.write('CUTOFF_HOVER ' + str(self.image_processor.cutoff_hover))
+
+  #https://www.appsloveworld.com/opencv/100/3/how-to-resize-text-for-cv2-puttext-according-to-the-image-size-in-opencv-python
+  def get_optimal_font_scale(self, text):
+    fontScale = 3*(self.window_width//6)
+    for scale in reversed(range(0, 60, 1)):
+        textSize = cv2.getTextSize(text, fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=scale/10, thickness=1)
+        new_width = textSize[0][0]
+        if (new_width <= fontScale):
+            return scale/7
+    return 1
 
 
   def set_info_txt(self, image:Image):

@@ -4,6 +4,7 @@ class AppState(Enum):
   DEFAULT = 0
   DEBUG = 1
   CALIBRATION = 2
+  CALIBRATION_LOAD = 3
 
 class CalibrationState(Enum):
   HOVER_INFO = 0
