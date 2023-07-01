@@ -147,8 +147,7 @@ adjust --video_id if necessary
 ### in DEBUG mode:
 py touch-input.py --video_id 1 -s debug
 
-# Recommended for the first time!
-### start with calibration:
+### start with calibration (Recommended for the first time!):
 py touch-input.py --video_id 1 -s calibration
 
 ### start without calibration (use values from last calibration):
@@ -169,8 +168,3 @@ https://gist.github.com/nkymut/1cb40ea6ae4de0cf9ded7332f1ca0d55
 
 scale font size of text to the image size
 https://www.appsloveworld.com/opencv/100/3/how-to-resize-text-for-cv2-puttext-according-to-the-image-size-in-opencv-python
-
-
-
-
-
