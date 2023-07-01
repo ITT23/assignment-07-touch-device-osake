@@ -94,12 +94,39 @@ Example: 0 = pixel would need to be complete black, 255 = complete white
 - first the frame gets converted to a gray image
 - we apply the dilate and erode filters to better distinguish the touched/hovered areas
 - in the next step the filtered gray image gets its contoures detected twice. First with the cutoff value for touch and then for the cutoff value for hover.
-- based on the resulting contours the input gets interpreted as touch, hover or none of both.
+- based on the resulting contours the input gets interpreted as touch, hover or none of both (areas are analysed).
 - in the next step we used a agglomerative clustering algorithm to cluster the resulting contours to touch/hover points. 
 - touch and hover input is shown as boundig 'box' circles
 - to distinguish both the touch bbox circle is bigger and has a different color than the hover one.
 - while the detection worked we encountered the problem that the resulting bbox circle vibrated. The reason was that even if you hold still your fingertip the input x and y point changes slightly which causes this vibration. To prefend it we saved for every input its last input coordinates and compared the new one with it (example: last x_coordinate - deviation <= new x_coordinate <= last x_coordinate + deviation). In addition to that, it is checked if the last 5 inputs where touch, hover or none of both and based on the trend it decides if a new input accuring to be none most certainly again is a touch or hover or indeed none of both. All this steps helps to minimazie the pulsation of the bbox circle and further more prevents a "touch/hover release event" happening in task 2 and 3 when indeed the user did'nt release (even if the estimated cutoffs for hover and touch after the calibration is quite accurate it can happen that a input isn't reliable recogniced as touch or hover; this steps helps us to takle this problem).
 
 ## Calibration
-- 
+
+The calibration uses the image processing method as described in the Procedure section. However, the cutoff start value of 20 is used for touch and hover. The following logic is then used to determine the cutoff value for each touch and hover:
+
+- First of all, users are informed (all information on the screen is scaled to the image size) that they should place their finger on the touch display. For touch with the fingertip and for hover with the fingernail. Once the user is ready, the user presses the "c" key and the corresponding calibration begins. To do this, users should draw around on the display without lifting their finger (the event that they do so or get out of the camera's viewing angle is taken into account). If nothing is detected, the corresponding cutoff of the touch or hover calibration to be checked is increased by 1.
+
+- If more than the finger input is detected, the corresponding cutoff is reduced by 1.
+
+- If the user lifts their finger or leaves the camera area, the cutoff value quickly explodes above 90. In this case, the cutoff is reset to its original value of 20 and the calibration continues again and the value is further adjusted.
+
+- Whether the calibration for touch/hover was successful is checked by saving successes and failures. After a certain number of analyzed images, it is checked whether 90 percent of them for touch/hover (depending on which of the two is calibrated) were successful.
+
+### Examples
+
+#### Hover Calibration
+
+![cali_hover](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/4e44c3b3-3ebb-4ed4-956a-7aa4adde2342)
+
+#### Touch Calibration
+
+![cali_touch](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/30cf546b-2c19-43fd-8a8f-06a2ae211d03)
+
+#### After Calibration (2-Finger-Touch)
+
+![cali_double](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/b460785c-36ed-4dc1-babf-db5a40b0611d)
+
+
+
+
 
