@@ -1,6 +1,12 @@
 # Documentation
 
-Document your design decisions and building process here!
+## Team
+
+Michael Bierschneider
+![20230701_094314](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6e34f7dd-beec-4419-bd0a-afb924fbb080)
+
+Ruslan Asabidi
+![20230701_094332](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/f1388381-d4fc-43ce-b6d4-86c8633ec072)
 
 ## Building of the Multitouch-Box (MT-Box)
 
