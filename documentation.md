@@ -139,6 +139,7 @@ The calibration uses the image processing method as described in the Procedure s
 ## DIPPID:
 - 5700 is used as port
 - "127.0.0.1" is used as ID (adjust in Config.py if necessary)
+- if touch(es) or hover(s) happened events are send (like template in Assignment description)
 
 ## Start application:
 adjust --video_id if necessary
@@ -154,6 +155,7 @@ py touch-input.py --video_id 1 -s default ("default" can also be omitted)
 
 ## Key Events
 q -> closes/exits touch-input application
+
 c -> while calibration: inits calibration steps; after calibration: restarts calibration
 
 # Sources:
