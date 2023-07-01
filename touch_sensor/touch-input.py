@@ -89,7 +89,7 @@ class Application:
       if self.calibration_proc.active == False:
         cv2.destroyAllWindows()
       
-      if self.state is not AppState.DEFAULT and self.calibration_proc.active == True:
+      if (self.state is not AppState.DEFAULT and self.calibration_proc.active == True) or self.state is AppState.DEBUG:
         self.capture.show_frame(processed_img)
       
       if success and self.calibration_proc.active == False:
@@ -142,7 +142,7 @@ if __name__ == "__main__":
   parser = ArgumentParser(prog="AR Game", description="crazy ar game.")
   
   group = parser.add_mutually_exclusive_group()
-  group.add_argument("--video_path", default="../assets/kompletter_Durchgang.mp4", type=str, help="relative path to video record")
+  group.add_argument("--video_path", default=None, type=str, help="relative path to video record")
   group.add_argument("--video_id", default=0, type=int, help="id of webcam found in evtest")
   
   parser.add_argument("-p", default=5700, type=int, help="dippid port")

@@ -344,7 +344,7 @@ class Calibration:
   def calibrate_cutoff(self):
     if self.state == CalibrationState.HOVER or self.state == CalibrationState.TOUCH:
       if self.image_processor.interaction == Interaction.NONE:
-        if self.state == CalibrationState.TOUCH and self.image_processor.cutoff_touch < 30:
+        if self.state == CalibrationState.TOUCH:
           #self.image_processor.cutoff_touch += 1
           #if not self.image_processor.points_number > 1:
           self.image_processor.increase_cutoff("touch")
@@ -352,7 +352,7 @@ class Calibration:
           #print("no hover")
           #self.cutoff_hover += 3
           #print('Cutoff Hover: ' + str(self.image_processor.cutoff_hover))
-        if self.state == CalibrationState.HOVER and self.image_processor.cutoff_touch < 45:
+        if self.state == CalibrationState.HOVER:
           #self.image_processor.cutoff_hover += 1
           self.image_processor.increase_cutoff("hover")
           #print(self.image_processor.cutoff_hover)
@@ -434,7 +434,7 @@ class Calibration:
                                   self.get_optimal_font_scale(Config.HOVER_CALIBRATION_TEXT), Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     elif self.state is CalibrationState.TOUCH:
       processed_img = cv2.putText(image, Config.TOUCH_CALIBRATION_TEXT, (int(self.window_width * 0.1), int(self.window_height * 0.1)), Config.FONT, \
-                                  self.get_optimal_font_scale(Config.FONT_SCALE_INFO_TXT), Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
+                                  self.get_optimal_font_scale(Config.TOUCH_CALIBRATION_TEXT), Config.COLOR_INFO_TXT, Config.THICKNESS_INFO_TXT, cv2.LINE_AA)
     
     return processed_img
 
