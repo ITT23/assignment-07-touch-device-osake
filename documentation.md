@@ -1,4 +1,4 @@
-![20230701_092901](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/37a69b6e-a43c-4281-b8dc-6475e12d6388)# Documentation
+# Documentation
 
 # Team
 
