@@ -92,7 +92,7 @@ class Application:
       if (self.state is not AppState.DEFAULT and self.calibration_proc.active == True) or self.state is AppState.DEBUG:
         self.capture.show_frame(processed_img)
       
-      if success and self.calibration_proc.active == False:
+      if success == True and self.calibration_proc.active == False:
         #pass
         self.sender.send_event(output, self.state)
 
