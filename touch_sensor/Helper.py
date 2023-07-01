@@ -55,9 +55,15 @@ class Capture:
     
     if not self.capture.isOpened():
       raise Exception("error opening video stream")
+    
+    #self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 620)
+    #self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 440)
 
     self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     self.height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    print("Window width: " + str(self.width))
+    print("Window height: " + str(self.height))
 
   def next_image(self) -> Union[bool, Mat]:
     return self.capture.read()
@@ -379,22 +385,22 @@ class Calibration:
             self.state = CalibrationState.HOVER_INFO
             self.detection_outcome = []
             #print('Hover Success - Array Length: ' + str(len(self.detection_outcome)))
-            print("Calculated Touch Cutoff is" + str(self.image_processor.cutoff_hover))
+            #print("Calculated Touch Cutoff is" + str(self.image_processor.cutoff_hover))
           if self.state == CalibrationState.HOVER:
             self.state = CalibrationState.FINISHED
             self.image_processor.state = None
             self.detection_outcome = []
             #print('Touch Success - Array Length: ' + str(len(self.detection_outcome)))
             self.active = False
-            print("Calculated Hover Cutoff is " + str(self.image_processor.cutoff_touch))
+            #print("Calculated Hover Cutoff is " + str(self.image_processor.cutoff_touch))
             self.save_calibration_data()
 
         else:
           self.detection_outcome = []
-          print('Failded - Array Length: ' + str(len(self.detection_outcome)))
+          #print('Failded - Array Length: ' + str(len(self.detection_outcome)))
           
-    print(self.image_processor.cutoff_hover)
-    print(self.image_processor.cutoff_touch)
+    #print(self.image_processor.cutoff_hover)
+    #print(self.image_processor.cutoff_touch)
 
   def save_calibration_data(self):
     CURR_DIR = os.path.dirname(__file__)

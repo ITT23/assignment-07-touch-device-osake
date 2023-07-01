@@ -69,6 +69,8 @@ class Application:
     while self.running:
       # check if touch or hover happened
       ret, frame = self.capture.next_image()
+      frame = frame[5:470, 5:630]
+      #frame = cv2.resize(frame, (640, 480))
 
       if not ret:
         #print("no frames to process... terminating application")
@@ -160,3 +162,4 @@ if __name__ == "__main__":
   application.run()
 
    # py touch-input.py --video_id 1 -s debug
+   # py touch-input.py --video_id 0 -s calibration
