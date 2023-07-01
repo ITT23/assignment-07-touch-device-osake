@@ -87,14 +87,12 @@ class Application:
       if self.calibration_proc.active == True:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
-      '''
+      
       if self.calibration_proc.active == False:
         cv2.destroyAllWindows()
-      '''
       
-      #if (self.state is not AppState.DEFAULT and self.calibration_proc.active == True) or self.state is AppState.DEBUG:
-      
-      self.capture.show_frame(processed_img)
+      if (self.state is not AppState.DEFAULT and self.calibration_proc.active == True) or self.state is AppState.DEBUG:
+        self.capture.show_frame(processed_img)
       
       if success == True and self.calibration_proc.active == False:
         #pass
