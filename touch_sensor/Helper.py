@@ -376,7 +376,7 @@ class Calibration:
           else:
             self.image_processor.decrease_cutoff("hover")
         
-        if self.state.value == self.image_processor.interaction.value:
+        if self.state.value == self.image_processor.interaction.value and self.image_processor.points_number == 1:
           self.detection_outcome.append(1)
         
       #print(len(self.detection_outcome))
