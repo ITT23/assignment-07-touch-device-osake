@@ -1,13 +1,15 @@
-# Agglomerative Clustering
+# Agglomerative Clustering of the detected contours
 # https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
 
 import cv2
 import numpy as np
 
+from Config import Config
+
 class Clustering:
 
-  def cluster(self, contours: list, threshold_distance=40.0): #magic values to config
-    while len(contours) > 1: #is a while loop a good idea when we are time critically processing a video?
+  def cluster(self, contours: list, threshold_distance=Config.CLUSTERING_THRESHOLD):
+    while len(contours) > 1: 
       min_distance = None
       min_coordinate = None
 

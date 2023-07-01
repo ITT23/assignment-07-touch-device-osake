@@ -31,28 +31,24 @@ class Application:
       "CUTOFF_HOVER": 0,
     }
 
-    ### load calibration values
+    # load calibration values
+    ## init calibration process to calculate the values
     if self.state == AppState.CALIBRATION:
       self._perform_calibration()
-      #TODO: exit app after calibrating
-
+    ## scip calibration and load values from the last calibration process
     else:
       self._load_calibration_values()
-      #self.calibration_proc.set_status()
 
+    # use-case: useage of prerecorder videos
     if self.video_path is not None:
       path = os.path.join(self.CURR_DIR, self.video_path)
       if not os.path.exists(path):
         raise Exception("provided path to videos does not exist")
 
-    #self.image_processor.apply_calibration_cutoff(calibration=self.calibration)
     self.sender = DIPPID_Sender(self.dippid_port)   
-
     self.running = True
 
   def _perform_calibration(self) -> None:
-    #print("NYI")#TODO
-    #pass
     self.calibration_proc.set_status()
   
   def _load_calibration_values(self) -> None:
@@ -69,16 +65,15 @@ class Application:
     while self.running:
       # check if touch or hover happened
       ret, frame = self.capture.next_image()
-      frame = frame[5:470, 5:630]
-      #frame = cv2.resize(frame, (640, 480))
 
       if not ret:
-        #print("no frames to process... terminating application")
+        print("no frames to process... terminating application")
         break
-
-      t1 = time.time()
+      
+      # get processing time for the image processing of a frame (de-comment corresponding lines below if needed)
+      #t1 = time.time()
       success, processed_img, output = self.image_processor.process_image(frame)
-      t2 = time.time()
+      #t2 = time.time()
       if self.state == AppState.DEBUG:
         pass
         #print(f"processing time for this frame was {t2-t1} seconds.")
@@ -87,40 +82,34 @@ class Application:
       if self.calibration_proc.active == True:
         processed_img = self.calibration_proc.set_info_txt(processed_img)
         self.calibration_proc.calibrate_cutoff()
-      
+
+      # if calibration finished (or skiped -> close window)
       if self.calibration_proc.active == False:
         cv2.destroyAllWindows()
-      
+
+      # show window just in the calibration process
       if (self.state is not AppState.DEFAULT and self.calibration_proc.active == True) or self.state is AppState.DEBUG:
         self.capture.show_frame(processed_img)
-      
+
+      # send dippid data (not while the calibration process)
       if success == True and self.calibration_proc.active == False:
-        #pass
         self.sender.send_event(output, self.state)
 
-      # Wait for a key press and check if it's the 'q' key
-      # just for testing purposes, but later it could init a new calibration process
-      '''
-      if cv2.waitKey(1) & 0xff == ord('q'):
-        self.running = False
-        self.capture.release()
-        cv2.destroyAllWindows()
-      '''
-      
-      
+      # key events
+      ## do the calibration process again (in case the user wants to re-calibrate)
       if keyboard.is_pressed('c') and self.calibration_proc.active == False:
         self.calibration_proc.set_status()
-
+      # quit while the calibration process is not active
       if keyboard.is_pressed('q') and self.calibration_proc.active == False:
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
-
+      # quit while the calibration process is active
       if cv2.waitKey(1) & 0xff == ord('q'):
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
-
+      # init next step of the calibration process
       if cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active == True:
         if self.calibration_proc.state == CalibrationState.HOVER_INFO:
           self.calibration_proc.state = CalibrationState.HOVER
