@@ -99,6 +99,7 @@ Example: 0 = pixel would need to be complete black, 255 = complete white
 - touch and hover input is shown as boundig 'box' circles
 - to distinguish both the touch bbox circle is bigger and has a different color than the hover one.
 - while the detection worked we encountered the problem that the resulting bbox circle vibrated. The reason was that even if you hold still your fingertip the input x and y point changes slightly which causes this vibration. To prefend it we saved for every input its last input coordinates and compared the new one with it (example: last x_coordinate - deviation <= new x_coordinate <= last x_coordinate + deviation). In addition to that, it is checked if the last 5 inputs where touch, hover or none of both and based on the trend it decides if a new input accuring to be none most certainly again is a touch or hover or indeed none of both. All this steps helps to minimazie the pulsation of the bbox circle and further more prevents a "touch/hover release event" happening in task 2 and 3 when indeed the user did'nt release (even if the estimated cutoffs for hover and touch after the calibration is quite accurate it can happen that a input isn't reliable recogniced as touch or hover; this steps helps us to takle this problem).
+- resulting values are normalized before sending as Dippid-Events
 
 ## Calibration
 
