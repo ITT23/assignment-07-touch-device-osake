@@ -379,6 +379,13 @@ class Calibration:
         if self.state.value == self.image_processor.interaction.value and self.image_processor.points_number == 1:
           self.detection_outcome.append(1)
         
+        if self.image_processor.cutoff_touch >= 90 or self.image_processor.cutoff_hover >=90:
+          if self.state == CalibrationState.TOUCH:
+            self.image_processor.cutoff_touch = 20
+          else:
+            self.image_processor.cutoff_hover = 20
+          self.detection_outcome = []
+        
       #print(len(self.detection_outcome))
       if len(self.detection_outcome) >= Config.CALIBRATION_THRESHOLD: # 150
         if self.detection_outcome.count(1) >= Config.CALIBRATION_THRESHOLD_ACCEPTANCE: # 130
