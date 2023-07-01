@@ -112,6 +112,14 @@ The calibration uses the image processing method as described in the Procedure s
 
 - Whether the calibration for touch/hover was successful is checked by saving successes and failures. After a certain number of analyzed images, it is checked whether 90 percent of them for touch/hover (depending on which of the two is calibrated) were successful.
 
+- The steps in normal image processing to reduce the vibration of the circled bbox are not used in calibration.
+
+- The calibrated values ​​are also saved in calibration.txt if you want to skip calibration next time. These are then automatically taken accordingly.
+
+- The calibration process can be repeated at any time by pressing the "c" key.
+
+- window is closed after calibration (processing and sending of events happens in the background)
+
 ### Examples
 
 #### Hover Calibration
@@ -125,6 +133,39 @@ The calibration uses the image processing method as described in the Procedure s
 #### After Calibration (2-Finger-Touch)
 
 ![cali_double](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/b460785c-36ed-4dc1-babf-db5a40b0611d)
+
+# Usage
+
+## DIPPID:
+- 5700 is used as port
+- "127.0.0.1" is used as ID (adjust in Config.py if necessary)
+
+## Start application:
+adjust --video_id if necessary
+
+### in DEBUG mode:
+py touch-input.py --video_id 1 -s debug
+
+### start with calibration:
+py touch-input.py --video_id 1 -s calibration
+
+### start without calibration (use values from last calibration):
+py touch-input.py --video_id 1 -s default ("default" can also be omitted)
+
+## Key Events
+q -> closes/exits touch-input application
+c -> while calibration: inits calibration steps; after calibration: restarts calibration
+
+# Sources:
+
+agglomerative clustering
+https://cullensun.medium.com/agglomerative-clustering-for-opencv-contours-cd74719b678e
+
+convert cv2 image to pyglet image
+https://gist.github.com/nkymut/1cb40ea6ae4de0cf9ded7332f1ca0d55
+
+scale font size of text to the image size
+https://www.appsloveworld.com/opencv/100/3/how-to-resize-text-for-cv2-puttext-according-to-the-image-size-in-opencv-python
 
 
 
