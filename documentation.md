@@ -68,7 +68,7 @@
 
 ## Preparation and Prerequisits
 - we needed to have a way to work on the assignment at home without carrieng the MT-Box with us. In order to be able to do that, we implemented a tool (webcam_recorder.py). It enables us to record webcam input and thus making some case samples (videos) to work with at home.
-- in addtion to this tool we made a copy of the touch-input.py (main file for task 1) and called it touch-input_with_videos.py. It's used as a identical copy for touch-input.py but with the difference that is takes it video footage from pre-recorded vidos rather than real-time webcam input. 
+- in addtion to this tool we made a copy of the touch-input.py (main file for task 1) and called it touch-input_with_videos.py. It's used as a identical copy for touch-input.py but with the difference that is takes it video footage from pre-recorded vidos rather than real-time webcam input. In the further course, the functionality of the remote version "touch-input_with_videos.py" was integrated into "touch-input.py". As a result, if needed a video path is passed to the application when required. If not, the webcam is used.
 
 ## Detecting Touch and Hover
 touch = strong touch
