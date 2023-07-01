@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
-import os, time, platform, enum
+import os, time, platform
+from enum import Enum
 from typing import Union, Callable
 
 from pyglet import app, window
@@ -9,7 +10,6 @@ from pyglet.window import key
 
 from DIPPID import SensorUDP
 from recognizer import Recogniser, Point
-
 
 CURR_DIR = os.path.dirname(__file__)
 
@@ -23,7 +23,7 @@ class Font:
   TEXT_SIZE = 15
 
 
-class TouchState(enum):
+class TouchState(Enum):
   TOUCH = 0
   HOVER = 1
   RELEASE = 2
@@ -57,11 +57,12 @@ class Launcher:
     #WINDOWS
     #TODO: requires evaluation
     elif self.current_platform == self.OS_NAMES[2]:
+      print("start discord")
       #needs to end with exe
       #if already surrounded by '' do not include
       #check if app_path exists
       #exe
-      os.system(f"Start-Process '{app_path}'")
+      os.system(f"{app_path}")
       #eventually "start <app.exe>" works?
 
 class TouchscreenInput:
@@ -75,7 +76,7 @@ class TouchscreenInput:
     event_name: touch_screen
     define update rate!!!
   '''
-  TOUCH_SCREEN_EVENT_NAME = 'touch_screen'
+  TOUCH_SCREEN_EVENT_NAME = 'events'
   TOUCH_RELEASE_THRESHOLD = 100 #ms
 
   def __init__(self, port: int) -> None:
@@ -87,15 +88,16 @@ class TouchscreenInput:
     self._touch_status = TouchState.RELEASE
 
   def _cb_touch(self, data: dict) -> None:
-    if data["event"] == "touch" and self._touch_status == TouchState.TOUCH:
-      self.callbacks["drag"](data["x"], data["y"])
+    print(data)
+    if data["0"]["type"] == "touch" and self._touch_status == TouchState.TOUCH:
+      self.callbacks["drag"](data["0"]["x"], data["0"]["y"])
     
-    elif data["event"] == "touch":
+    elif data["0"]["type"] == "touch":
       self.callbacks["on_touch_press"]()
       self._touch_status = TouchState.TOUCH
     
-    elif data["event"] == "hover":
-      self.callbacks["on_touch_hover"](data["x"], data["y"])
+    elif data["0"]["type"] == "hover":
+      self.callbacks["on_touch_hover"](data["0"]["x"], data["0"]["y"])
       self._touch_status = TouchState.HOVER
 
     self._last_update = time.time()
@@ -174,7 +176,7 @@ class Application:
       content = f.read().split("\n")
       
       for line in content:
-        app_path, gesture_name = line.split(" ")
+        gesture_name, app_path = line.split(" ")
 
         if gesture_name not in self._template_names:
           raise Exception(f"gesture does not exist in {self.TEMPLATE_PATH}")

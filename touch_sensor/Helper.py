@@ -196,6 +196,8 @@ class Image_Processor:
     contours_hover, _ = cv2.findContours(thresh_hover, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     # check if it was a touch or hover and adjust corresponding values
+    #print("touch: ", len(contours_touch))
+    #print("hover: ", len(contours_hover))
     self.set_input_status(contours_touch, contours_hover)
 
     
@@ -255,7 +257,7 @@ class Image_Processor:
     for finger in self.last_fing_tip_coordinates:
       output.coordinates.append(normalise_points(finger, self._video_dimensions))
 
-    return (output.interaction is not Interaction.NONE, flipped_image, output)
+    return (output.interaction is not Interaction.NONE and self.points_number > 0, flipped_image, output)
 
   # check on the basis of the contours for touch and hover if the input is hovering or touching
   def set_input_status(self, contours_touch: list, contours_hover: list) -> None:

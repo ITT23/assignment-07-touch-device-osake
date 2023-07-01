@@ -37,7 +37,7 @@ class Sensor():
     # receives json formatted data from sensor,
     # stores it and notifies callbacks
     def _update(self, data):
-        try:
+        try:       
             data_json = json.loads(data)
         except json.decoder.JSONDecodeError:
             # incomplete data
