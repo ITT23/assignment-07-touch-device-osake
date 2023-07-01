@@ -2,7 +2,7 @@
 
 ![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/313a7573-0ee2-4572-8c9f-902a70ad1f0e)
 
-# Team
+# Team Osake
 
 ## Michael Bierschneider
 
