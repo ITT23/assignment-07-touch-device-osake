@@ -40,6 +40,33 @@
 
 ![WhatsApp Image 2023-07-01 at 10 40 20 (1)](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/090e44b0-72a6-4a8c-aac0-8b9989dee2f5)
 
+![20230701_100000](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/80be5971-88fb-4475-bb1b-03633a971fdc)
+
+- Since the camera shone a little on the side, we taped it off with adhesive tape on the side so that the unwanted light did not have to be taken into account for image processing.
+
+![20230701_095502](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6de333f0-e0c3-45d0-aa5b-86b2849ac725)
+
+- In order to have access to the inside of the box at any time (e.g. to clean the glass plate from below), we installed the touch screen as a kind of lever.
+
+![20230701_143332](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/b5f90cae-18f0-4fb5-9c23-ba3193133890)
+
+- In the next step, we wanted to make the touch area recognizable for the user. To do this, we first clearly marked the touch area visually.
+
+![20230701_103211](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/1d779bd7-b47d-43b3-b30e-e8b771de8831)
+
+- However, we encountered a problem later on. The camera returned different images for two different device properties (in our case Windows and MacOs). With Windows, the touch area fitted exactly (was also drawn/determined on this basis). With the MacOs, however, the image was much larger and clearly encompassed large parts outside of the drawn touch area. Since several attempts to automatically adjust the image failed, we decided to work without a box drawn in. There was a risk that the size scaling was not only related to Windows and MacOs, but could also be affected by other device attributes, which posed the risk that even if we adjust it for Windows and MacOS, it would again be scaled incorrectly due to other causes could.
+
+#### Osake-Touch with drawn Touch-Screen:
+
+![20230701_104811](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6f3ddbbf-e0dc-431e-83b5-aee18ab06aff)
+
+
+#### Osake-Touch without drawn Touch-Screen
+
+![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/e599473f-c5a6-4cde-8fab-ad77d39b7894)
+
+- Finally, we taped the box again at the most important points with adhesive tape to increase stability.
+
 
 ## Preparation and Prerequisits
 - we needed to have a way to work on the assignment at home without carrieng the MT-Box with us. In order to be able to do that, we implemented a tool (webcam_recorder.py). It enables us to record webcam input and thus making some case samples (videos) to work with at home.
