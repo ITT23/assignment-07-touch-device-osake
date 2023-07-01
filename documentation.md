@@ -1,4 +1,6 @@
-# Documentation
+# The "Osake-Touch"
+
+![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/313a7573-0ee2-4572-8c9f-902a70ad1f0e)
 
 # Team
 
@@ -11,10 +13,6 @@
 ![20230701_094332](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/f1388381-d4fc-43ce-b6d4-86c8633ec072)
 
 # Building of the Multitouch-Box (MT-Box)
-
-## The "Osake-Touch"
-
-![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/313a7573-0ee2-4572-8c9f-902a70ad1f0e)
 
 ### Building Process
 - we assembled the bottom of the box, and taped it along the center and the edges to gain stability and avoid scattering light from the bottom
