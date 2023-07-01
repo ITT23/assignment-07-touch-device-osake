@@ -1,24 +1,45 @@
-# Documentation
+![20230701_092901](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/37a69b6e-a43c-4281-b8dc-6475e12d6388)# Documentation
 
 # Team
 
 ## Michael Bierschneider
+
 ![20230701_094314](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6e34f7dd-beec-4419-bd0a-afb924fbb080)
 
 ## Ruslan Asabidi
+
 ![20230701_094332](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/f1388381-d4fc-43ce-b6d4-86c8633ec072)
 
 # Building of the Multitouch-Box (MT-Box)
 
 ## The "Osake-Touch"
 
+![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/313a7573-0ee2-4572-8c9f-902a70ad1f0e)
 
+### Building Process
 - we assembled the bottom of the box, and taped it along the center and the edges to gain stability and avoid scattering light from the bottom
 - we integrated a wooden board on the bottom of the box and taped the second bottom wings of the packages to the side so that the wodden board gets more stability and so that it does not distract the camera sensor
 - the wooden board helps that the camera is always even (with card board there is always a bit of variance)
 - we calculated (pi times thumb) the center of the bottom and taped the camera sensor with double-sided tape
+- First we had integrated two connections for the camera into the box. One each for a USB type, because one of us didn't have a USB C port on the laptop. This circumstance was then remedied by buying an adapter and we left it with the USB C connection.
 - we taped over the IR camera because it projected a lot of white dots onto the plexis glas which were reflected and resulted in distractions for the camera
+  
 - CHANGED CAMERA DEVICE: to Logitech camera, because the former camera made problems (to much integrated cameras)
+  
+#### Logitech Camera Device
+![20230701_092840](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/ae6dfd00-5ccf-4842-a0fd-a1415d401b95)
+
+- In order to further increase the stability of the camera, we fixed a block of wood in the middle of the wooden panel with screws and attached the camera to it with tape.
+
+
+![20230701_092901](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/48ff88ee-b6a1-4a66-b3ac-16221bc4851a)
+
+![20230701_093559](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6912b71a-16d6-4913-8365-8722f1108843)
+
+![20230701_094208](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/113a4ec3-0584-4df3-86ae-acfb27080182)
+
+![WhatsApp Image 2023-07-01 at 10 40 20 (1)](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/090e44b0-72a6-4a8c-aac0-8b9989dee2f5)
+
 
 ## Preparation and Prerequisits
 - we needed to have a way to work on the assignment at home without carrieng the MT-Box with us. In order to be able to do that, we implemented a tool (webcam_recorder.py). It enables us to record webcam input and thus making some case samples (videos) to work with at home.
