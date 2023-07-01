@@ -56,8 +56,8 @@ class Capture:
     if not self.capture.isOpened():
       raise Exception("error opening video stream")
     
-    #self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 620)
-    #self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 440)
+    self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 620)
+    self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 440)
 
     self.width = int(self.capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     self.height = int(self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -457,3 +457,4 @@ class DIPPID_Sender:
 
     else:
       self._socket.sendto(output.to_json().encode(), (self._ip, self._port))
+      print(output.to_json())
