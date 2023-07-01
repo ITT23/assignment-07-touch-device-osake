@@ -59,7 +59,7 @@
 ![20230701_104811](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/6f3ddbbf-e0dc-431e-83b5-aee18ab06aff)
 
 
-#### Osake-Touch without drawn Touch-Screen
+#### Osake-Touch without drawn Touch-Screen (final result)
 
 ![20230701_143320](https://github.com/ITT23/assignment-07-touch-device-osake/assets/41992838/e599473f-c5a6-4cde-8fab-ad77d39b7894)
 
