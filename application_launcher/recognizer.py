@@ -1,6 +1,7 @@
 # $1 gesture recognizer
 #file is based on https://depts.washington.edu/acelab/proj/dollar/dollar.pdf
 import math, os, csv
+from typing import Type
 
 class Point:
   def __init__(self, x: float, y: float) -> None:
