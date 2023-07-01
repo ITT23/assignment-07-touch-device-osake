@@ -147,6 +147,7 @@ adjust --video_id if necessary
 ### in DEBUG mode:
 py touch-input.py --video_id 1 -s debug
 
+# Recommended for the first time!
 ### start with calibration:
 py touch-input.py --video_id 1 -s calibration
 
