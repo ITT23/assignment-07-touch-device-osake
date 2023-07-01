@@ -8,13 +8,16 @@
 
 from argparse import ArgumentParser
 import os, time
+from collections import deque
 
-from pyglet import app, window, image
+from pyglet import app, window
 from pyglet.window import key
-from pyglet.image import ImageData
+from pyglet.shapes import Circle
 
-from AppState import AppState
 from Image import Image
+from TouchInput import TouchscreenInput
+from State import State
+from ActionState import ActionState
 
 CURR_DIR = os.path.dirname(__file__)
 
@@ -42,12 +45,14 @@ class Application:
   HOVER_RADIUS = 5
   HOVER_COLOUR = (0,255,0,255)
 
-  def __init__(self, dippid_port: int, state: AppState) -> None:
-    self.state = state
-    if self.state == AppState.DEFAULT:
-      self.window = window.Window(fullscreen=True, caption=self.NAME)
-    else:
+  DQ_LENGTH = 10
+
+  def __init__(self, dippid_port: int, debug: bool) -> None:
+    self.debug = debug
+    if self.debug:
       self.window = window.Window(width=self.DEBUG_WIDTH, height=self.DEBUG_HEIGHT, caption=self.NAME)
+    else:
+      self.window = window.Window(fullscreen=True, caption=self.NAME)
 
     self.width = self.window.width
     self.height = self.window.height
@@ -55,14 +60,13 @@ class Application:
     self.on_draw = self.window.event(self.on_draw)
     self.on_key_release = self.window.event(self.on_key_release)
 
-    #mouse events
-    self.on_mouse_drag = self.window.event(self.on_mouse_drag)
-    self.on_mouse_release = self.window.event(self.on_mouse_release)
-    self.on_mouse_press = self.window.event(self.on_mouse_press)
+    self.hover_circle = Circle(x=self.DEFAULT_HOVER_POSITION[0], y=self.DEFAULT_HOVER_POSITION[1], radius=self.HOVER_RADIUS, color=self.HOVER_COLOUR)
 
     self.images: list[Image] = []
     self._load_images()
-    self._init_image_parameters()
+
+    self.touch_input = TouchscreenInput(dippid_port)
+    self.state: deque[State] = deque([], maxlen=self.DQ_LENGTH) #saves action, last position and currently used image
     
   def _load_images(self) -> None:
     if not os.path.exists(self.ASSET_FOLDER) or not os.path.isdir(self.ASSET_FOLDER):
@@ -74,44 +78,70 @@ class Application:
 
         self.images.append(Image(key, image_path, (self.width, self.height)))
 
-  def _init_image_parameters(self) -> None:
-    pass
-
   def run(self) -> None:
     app.run()
 
   def on_draw(self) -> None:
     self.window.clear()
 
+    current_state = self.touch_input.update_state()
+    self.state.append(current_state.copy())
+    current_state = self.state[-1]
+
+    #move and select work interchangeably
+
+    #check if 1 or 2 finger
+    if current_state.has_two_fingers():
+      x, y = current_state.vec_1.x, current_state.vec_1.y
+      #need fixed image from select or move
+      #rotate and scale can interchange
+      #calc angle -> if angle is less then 2-3 degree -> no rotate
+      #calc distance -> if distance greater than x -> scale
+      #rotate and scale need at least one finger in the picture
+      pass
+    else:
+      if current_state.state == ActionState.TOUCH:
+
+      #select
+        #if previous state has hover or none AND current has touch -> select
+        #select image !!!!!!!! can only be checked if there is a previous state!!!!!
+        #forward/backward images
+        #bounding box
+
+      #move
+        #if previous state is select, this 
+        pass
+      
+
+      if current_state.state == ActionState.HOVER:
+        self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
+        self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
+
+
+
+    #unlock image
+    #last image is null
+    #calculate current
+
     for image in self.images:
       image.draw()
+    self.hover_circle.draw()
 
     time.sleep(self.FPS)
 
-  def on_mouse_drag(self, x: int, y: int, *_) -> None:
-    pass
-
-  def on_mouse_release(self, *_) -> None:
-    pass
-    
-  def on_mouse_press(self, *_) -> None:
-    pass
-  
-  def on_touch_hover(self, x: int, y: int, *_) -> None:
-    pass
-
   def on_key_release(self, symbol: int, _) -> None:
     if symbol == key.ESCAPE:
+      self.touch_input.end()
       app.exit()
 
 
 if __name__ == "__main__":
   parser = ArgumentParser(prog=f"{Application.NAME}", description="todo")
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
-  parser.add_argument("-s", default="default", type=str, choices=[state.name.lower() for state in AppState], help="debug mode does not start fullscreen and prints logs.")
+  parser.add_argument("-s", default=False, type=bool, help="enter debug mode by passing -s True")
 
   args = parser.parse_args()
 
-  application = Application(dippid_port=args.p, state=AppState[args.s.upper()])
+  application = Application(dippid_port=args.p, debug=args.s)
 
   application.run()

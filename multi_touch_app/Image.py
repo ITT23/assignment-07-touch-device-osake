@@ -4,6 +4,7 @@ import math
 from pyglet import image, sprite
 
 from Config import Config
+from Vector import Vector
 
 
 class SCALE_DIRECTION(Enum):
@@ -24,7 +25,6 @@ class Image:
   #   rotate images with a two-finger gesture
   #   scale images with a two-finger gesture
 
-
   def __init__(self, index: int, image_path: str, window_dimensions: tuple[int, int]) -> None:
     self._index = index
     self._window_dimensions = window_dimensions
@@ -38,12 +38,13 @@ class Image:
   def init_positions(self) -> None:
     self._image.x = Config.IMAGE[self._index]["x"] * self._window_dimensions[0]
     self._image.y = Config.IMAGE[self._index]["y"] * self._window_dimensions[1]
+    self._image.z = 1
     self._image.rotation = Config.IMAGE[self._index]["rotation"]
     self._image.scale = (self._window_dimensions[0] * Config.IMAGE[self._index]["scale"]) / self._image.width
 
-  def move(self, new_position: tuple[int, int]) -> None:
-    self._image.x = new_position[0]
-    self._image.y = new_position[1]
+  def move(self, new_position: Vector) -> None:
+    self._image.x = new_position.x
+    self._image.y = new_position.y
 
   #better work with rotation distance?
   def rotate(self, rotate_direction: ROTATE_DIRECTION) -> None:
@@ -66,10 +67,10 @@ class Image:
 
   #we want to scale so that the ratio of the image stays intact
   #better work with pinch distance
-  def scale(self, main_finger: tuple[int, int], help_finger: tuple[int, int]) -> None:
+  def scale(self, main_finger: Vector, help_finger: Vector) -> None:
     #scale image by double of distance
-    dy = (main_finger[1] - help_finger[1])
-    dx = (main_finger[0] - help_finger[0])
+    dy = (main_finger.y - help_finger.y)
+    dx = (main_finger.x - help_finger.x)
     distance_fingers = math.sqrt(dy ** 2 + dx ** 2 )
 
     diff_last_distance = distance_fingers - self._last_distance
@@ -82,6 +83,15 @@ class Image:
     #because scaling starts from (0,0) we must adjust the midpoint
     self._image.x = self._image.x - self._image.width / 2
     self._image.y = self._image.y - self._image.height / 2
+
+  def check_collision(self, finger: Vector) -> bool:
+    pass
+
+  def to_front(self) -> None:
+    self._image.z = 2
+
+  def to_back(self) -> None:
+    self._image.z = 1
 
   def draw(self) -> None:
     self._image.draw()
