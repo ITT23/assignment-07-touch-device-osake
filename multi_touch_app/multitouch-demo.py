@@ -48,6 +48,7 @@ class Application:
   DQ_LENGTH = 10
 
   ROTATION_ERROR_LIMIT = 2
+  STATE_MIN_SIZE = 3
 
   def __init__(self, dippid_port: int, debug: bool) -> None:
     self.debug = debug
