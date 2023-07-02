@@ -143,7 +143,8 @@ The calibration uses the image processing method as described in the Procedure s
 - if touch(es) or hover(s) happened events are send (like template in Assignment description)
 
 ## Start application:
-adjust --video_id if necessary
+- via terminal / command line
+- adjust --video_id in the following commands if necessary
 
 ### in DEBUG mode:
 py touch-input.py --video_id 1 -s debug
