@@ -1,3 +1,3 @@
 circle /Applications/Firefox.app
-star /Applications/Firefox.app
-triangle /Applications/Firefox.app
+star /Applications/Discord.app
+triangle /Applications/Obsidian.app

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
-import os, time, platform, sys
+import os, time, platform
 from enum import Enum
-from typing import Union, Callable
+from typing import Union
 
 from pyglet import app, window
 from pyglet.shapes import Circle
@@ -24,9 +24,11 @@ class Font:
 
 
 class TouchState(Enum):
-  TOUCH = 0
-  HOVER = 1
-  RELEASE = 2
+  NONE = 0
+  TOUCH = 1
+  DRAG = 2
+  RELEASE = 3
+  HOVER = 4
 
 
 class Launcher:
@@ -43,7 +45,6 @@ class Launcher:
       raise Exception(f"there is no application specified with path: {app_path}")
 
     #LINUX
-    #TODO: requires evaluation
     if self.current_platform == self.OS_NAMES[0]:
       #for linux, there is no prefix required to open an app from /usr/bin/
       os.system(f"{app_path} &")
@@ -55,15 +56,9 @@ class Launcher:
       os.system(f"open {app_path} &")
 
     #WINDOWS
-    #TODO: requires evaluation
+    #TODO: i dont know how to start applications on windows
     elif self.current_platform == self.OS_NAMES[2]:
-      print("start discord")
-      #needs to end with exe
-      #if already surrounded by '' do not include
-      #check if app_path exists
-      #exe
       os.system(f"{app_path}")
-      #eventually "start <app.exe>" works?
 
 class TouchscreenInput:
   #events: press, release, drag, hover
@@ -77,38 +72,49 @@ class TouchscreenInput:
     define update rate!!!
   '''
   TOUCH_SCREEN_EVENT_NAME = 'events'
-  TOUCH_RELEASE_THRESHOLD = 100 #ms
+  TOUCH_RELEASE_THRESHOLD = 1 #seconds
+  MAX_LEN_DQ = 20
+  DEFAULT_POSITION = (0,0)
 
   def __init__(self, port: int) -> None:
     self._sensor = SensorUDP(port)
-    self.callbacks = {}
-
-    self._sensor.register_callback(self.TOUCH_SCREEN_EVENT_NAME, self._cb_touch)
-    self._last_update = time.time()
-    self._touch_status = TouchState.RELEASE
-
-  def _cb_touch(self, data: dict) -> None:
-    print(data)
-    if data["0"]["type"] == "touch" and self._touch_status == TouchState.TOUCH:
-      self.callbacks["on_touch_drag"](data["0"]["x"], data["0"]["y"])
-    
-    elif data["0"]["type"] == "touch":
-      self.callbacks["on_touch_press"]()
-      self._touch_status = TouchState.TOUCH
-    
-    elif data["0"]["type"] == "hover":
-      self.callbacks["on_touch_hover"](data["0"]["x"], data["0"]["y"])
-      self._touch_status = TouchState.HOVER
+    self._sensor.register_callback(self.TOUCH_SCREEN_EVENT_NAME, self._cb)
 
     self._last_update = time.time()
+    self._last_state = TouchState.NONE
     
-  def check_update(self) -> None:
+  def _cb(self, *_) -> None:
+    self._last_update = time.time()
+
+  def check_update(self) -> tuple[TouchState, tuple[int, int]]:
     if time.time() - self._last_update > self.TOUCH_RELEASE_THRESHOLD:
-      self.callbacks["on_touch_release"]()
-      self._touch_status = TouchState.RELEASE
+      self._last_state = TouchState.RELEASE
+      self._last_update = time.time()
+      
+      return (self._last_state, self.DEFAULT_POSITION)
 
-  def register_callback(self, key: str, cb: Callable) -> None:
-    self.callbacks[key] = cb
+    data = self._sensor.get_value(self.TOUCH_SCREEN_EVENT_NAME)
+    if len(data) == 0:
+      self._last_state = TouchState.NONE
+
+      return (self._last_state, self.DEFAULT_POSITION)
+
+
+    if data["0"]["type"].upper() == TouchState.TOUCH.name or data["0"]["type"].upper() == TouchState.HOVER.name:
+      if self._last_state == TouchState.TOUCH or self._last_state == TouchState.DRAG:
+        self._last_state = TouchState.DRAG
+
+      else:
+        self._last_state = TouchState.TOUCH
+
+      return (self._last_state, (data["0"]["x"], data["0"]["y"]))
+
+    else:
+      self._last_state = TouchState.NONE
+      self._last_update = time.time()
+
+      return (self._last_state, self.DEFAULT_POSITION)
+
 
 class Mapping:
 
@@ -119,7 +125,7 @@ class Mapping:
 
 class Application:
 
-  FPS = 1 / 60
+  FPS = 1 / 20
   WIDTH = 1280
   HEIGTH = 720
   NAME = "Application Launcher"
@@ -133,16 +139,12 @@ class Application:
   CIRCLE_COLOUR_START = (0,0,255,255)
   CIRCLE_RADIUS_START = 8
 
-  DEFAULT_HOVER_POSITION = (-5, -5)
-  HOVER_RADIUS = 5
-  HOVER_COLOUR = (0,255,0,255)
-
   def __init__(self, dippid_port: int) -> None:
     self.window = window.Window(self.WIDTH, self.HEIGTH, caption=self.NAME)
     self.width = self.window.width
     self.height = self.window.height
     self.on_draw = self.window.event(self.on_draw)
-    self.on_key_press = self.window.event(self.on_key_press)
+    self.on_key_release = self.window.event(self.on_key_release)
 
     #mouse events
     self.on_mouse_drag = self.window.event(self.on_mouse_drag)
@@ -151,29 +153,24 @@ class Application:
 
     #touch screen events
     self.t_input = TouchscreenInput(dippid_port)
-    self.t_input.register_callback("on_touch_drag", self.t_drag) #would name it otherwise, but on_mouse_drag is given by pyglet and we dont wanna double implement the same function for touch_screen
-    self.t_input.register_callback("on_touch_release", self.t_release)
-    self.t_input.register_callback("on_touch_press", self.t_press)
-    self.t_input.register_callback("on_touch_hover", self.t_hover)
-    
-    self.recogniser = Recogniser()
-    self.recogniser.load_templates(self.TEMPLATE_PATH)
-    self._template_names = self.recogniser.get_unique_template_names()
     
     self.mappings = self._load_mappings()
+
+    self.recogniser = Recogniser()
+    self.recogniser.load_templates(self.TEMPLATE_PATH, self.mappings)
+    self._template_names = self.recogniser.get_unique_template_names()
 
     self.launcher = Launcher()
 
     self.shapes: list[Circle] = []
     self.points: list[Point] = []
-    
-    self.hover_circle = Circle(x=self.DEFAULT_HOVER_POSITION[0], y=self.DEFAULT_HOVER_POSITION[1], radius=self.HOVER_RADIUS, color=self.HOVER_COLOUR)
 
     self.label = Label(text=Font.INFO, font_name=Font.NAME, font_size=Font.TEXT_SIZE, bold=True, color=Font.COLOUR, x=Font.TEXT_X, y=Font.TEXT_Y)
     self.label.text = self.label.text + ', '.join(self._template_names)
 
   def _denormalise(self, x: int, y: int) -> tuple[int, int]:
-    new_x = x * self.width
+    #also mirroring x values in this step
+    new_x = (1 - x) * self.width
     new_y = y * self.height
 
     return (new_x, new_y)
@@ -186,9 +183,6 @@ class Application:
       
       for line in content:
         gesture_name, app_path = line.split(" ")
-
-        if gesture_name not in self._template_names:
-          raise Exception(f"gesture does not exist in {self.TEMPLATE_PATH}")
 
         if not os.path.exists(app_path):
           raise Exception(f"path for {app_path} does not exist")
@@ -209,13 +203,21 @@ class Application:
 
   def on_draw(self) -> None:
     self.window.clear()
-
-    self.t_input.check_update()
+    
+    state, coordinates = self.t_input.check_update()
+    if state == TouchState.RELEASE:
+      self.on_mouse_release() #reusing mouse methods as they have the same body
+    elif state == TouchState.TOUCH:
+      self.on_mouse_press()
+    elif state == TouchState.DRAG:
+      x, y = self._denormalise(coordinates[0], coordinates[1])
+      self.on_mouse_drag(x, y)
+    elif state == TouchState.NONE:
+      self.on_mouse_press()
 
     for point in self.shapes:
       point.draw()
 
-    self.hover_circle.draw()
     self.label.draw()
 
     time.sleep(self.FPS)
@@ -230,9 +232,6 @@ class Application:
 
     self.shapes.append(shape)
     self.points.append(Point(x,y))
-
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
 
   def on_mouse_release(self, *_) -> None:
     t1 = time.time()
@@ -253,86 +252,20 @@ class Application:
     t_delta = round((time.time() - t1) * 1000)
 
     self.label.text = f"Result: {template.name} ({accuracy}) in {t_delta}ms."
-
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
     
   def on_mouse_press(self, *_) -> None:
     self.shapes = []
     self.points = []
 
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
-  
-  def on_touch_hover(self, x: int, y: int, *_) -> None:
-    self.hover_circle.x = x
-    self.hover_circle.y = y
-
-  def t_drag(self, x: int, y: int, *_):
-    x, y = self._denormalise(x, y)
-
-    #draws the first circle in blue and larger so that the starting points is recognisable
-    if len(self.shapes) == 0:
-      shape = Circle(x=x, y=y, radius=self.CIRCLE_RADIUS_START, color=self.CIRCLE_COLOUR_START)
-    
-    else:
-      shape = Circle(x=x, y=y, radius=self.CIRCLE_RADIUS, color=self.CIRCLE_COLOUR)
-
-    self.shapes.append(shape)
-    self.points.append(Point(x,y))
-
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
-
-  def t_release(self, *_):
-    t1 = time.time()
-
-    template, score = self.recogniser.recognise(self.points)
-
-    if template == None:
-      self.label.text = "Too few points drawn."
-      return
-
-    mapped_app = self._get_app_by_gesture(template.name)
-    if mapped_app == None:
-      self.label.text = "Invalid gesture"
-      return
-
-    self.launcher.open_app(mapped_app)
-    accuracy = format(score, ".2f")
-    t_delta = round((time.time() - t1) * 1000)
-
-    self.label.text = f"Result: {template.name} ({accuracy}) in {t_delta}ms."
-
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
-
-  def t_press(self, *_):
-    self.shapes = []
-    self.points = []
-
-    self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
-    self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
-
-  def t_hover(self, x: int, y: int, *_):
-    x, y = self._denormalise(x, y)
-
-    self.hover_circle.x = x
-    self.hover_circle.y = y
-
-  def on_key_press(self, symbol: int, _) -> None:
+  def on_key_release(self, symbol: int, *_) -> None:
     if symbol == key.ESCAPE:
       app.exit()
 
     elif symbol == key.Q:
       self.on_mouse_press()
 
-def trace(frame, event, arg):
-  print("%s, %s:%d" % (event, frame.f_code.co_filename, frame.f_lineno))
-  return trace
 
 if __name__ == "__main__":
-  #sys.settrace(trace)
   parser = ArgumentParser(prog=f"{Application.NAME}", description="todo")
   parser.add_argument("-p", default=5700, type=int, help="dippid port")
 

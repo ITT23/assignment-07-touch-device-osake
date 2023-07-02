@@ -217,11 +217,15 @@ class Recogniser:
 
     return list(set(template_names))
 
-  def load_templates(self, template_path: str) -> None:
+  def load_templates(self, template_path: str, mappings: Type["Mapping"]=None) -> None:
     '''
       load templates from a path (folder) which contains multiple csv files. structure of these csv files is: idx,label,x,y,timestamp
 
     '''
+    wanted_templates: list[str] = []
+    for mapping in mappings:
+      wanted_templates.append(mapping.gesture_name)
+
     if not os.path.exists(template_path):
       raise Exception("template path does not exist")
 
@@ -246,8 +250,16 @@ class Recogniser:
           for row in csv_reader:
             class_name = row[1]
             class_template.append(Point(int(row[2]), int(row[3])))
+          
+          if class_name not in wanted_templates:
+            continue
+          else:
+            wanted_templates.remove(class_name)
 
           self.add_template(class_name, class_template)
+    
+    if len(wanted_templates) != 0:
+      raise Exception(f"some template names are not allowed: {', '.join(wanted_templates)}")
 
   def recognise(self, points: list[Point]) -> tuple[Template, float]:
     '''

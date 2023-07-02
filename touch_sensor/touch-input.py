@@ -1,7 +1,3 @@
-'''
-TODO:
-
-'''
 import time, os, keyboard, cv2
 
 from argparse import ArgumentParser, ArgumentTypeError
@@ -104,12 +100,14 @@ class Application:
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
+        
       # quit while the calibration process is active
       if cv2.waitKey(1) & 0xff == ord('q'):
         self.running = False
         self.capture.release()
         cv2.destroyAllWindows()
       # init next step of the calibration process
+
       if cv2.waitKey(1) & 0xff == ord('c') and self.calibration_proc.active == True:
         if self.calibration_proc.state == CalibrationState.HOVER_INFO:
           self.calibration_proc.state = CalibrationState.HOVER
