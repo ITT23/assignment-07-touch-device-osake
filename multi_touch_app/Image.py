@@ -1,5 +1,5 @@
 from enum import Enum
-import math
+import math, random
 
 from pyglet import image, sprite
 
@@ -30,7 +30,7 @@ class Image:
     self._window_dimensions = window_dimensions
     self._image_data = image.load(image_path)
     self._image = sprite.Sprite(self._image_data, 0,0,0)
-    
+
     self.init_positions()
 
     self._last_distance = 1
@@ -39,8 +39,8 @@ class Image:
     self._image.x = Config.IMAGE[self._index]["x"] * self._window_dimensions[0]
     self._image.y = Config.IMAGE[self._index]["y"] * self._window_dimensions[1]
     self._image.z = 1
-    self._image.rotation = Config.IMAGE[self._index]["rotation"]
-    self._image.scale = (self._window_dimensions[0] * Config.IMAGE[self._index]["scale"]) / self._image.width
+    self._image.rotation = random.uniform(Config.IMAGE_ROTATION_BOUNDARY[0], Config.IMAGE_ROTATION_BOUNDARY[1])
+    self._image.scale = (self._window_dimensions[0] * random.uniform(Config.IMAGE_SCALE_BOUNDARY[0], Config.IMAGE_SCALE_BOUNDARY[1])) / self._image.width
 
   def move(self, new_position: Vector) -> None:
     self._image.x = new_position.x

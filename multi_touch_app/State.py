@@ -11,4 +11,4 @@ class State:
   timestamp = time.time()
 
   def has_two_fingers(self) -> bool:
-    return self.vec2 is not None
+    return self.vec_2 != None

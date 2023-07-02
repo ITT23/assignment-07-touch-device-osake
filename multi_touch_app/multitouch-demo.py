@@ -33,7 +33,7 @@ class Font:
 
 class Application:
 
-  FPS = 1 / 60
+  FPS = 1 / 20
   DEBUG_WIDTH = 1280
   DEBUG_HEIGHT = 720
   NAME = "Multitouch Demo"
@@ -46,6 +46,8 @@ class Application:
   HOVER_COLOUR = (0,255,0,255)
 
   DQ_LENGTH = 10
+
+  ROTATION_ERROR_LIMIT = 2
 
   def __init__(self, dippid_port: int, debug: bool) -> None:
     self.debug = debug
@@ -84,54 +86,81 @@ class Application:
   def on_draw(self) -> None:
     self.window.clear()
 
-    current_state = self.touch_input.update_state()
-    self.state.append(current_state.copy())
-    current_state = self.state[-1]
+    for image in self.images:
+      image.draw()
+    self.hover_circle.draw()
 
+    current_state: State = self.touch_input.update_state()
+    self.state.append(current_state)
+
+    if len(self.state) < self.STATE_MIN_SIZE:
+      return
     #move and select work interchangeably
+    if current_state.state == ActionState.TOUCH and (self.state[-2] == ActionState.HOVER or self.state[-2] == ActionState.NONE):
+        #select
+          #if previous state has hover or none AND current has touch -> select
+          #select image !!!!!!!! can only be checked if there is a previous state!!!!!
+          #forward/backward images
+          #bounding box
+        current_state.state = ActionState.SELECT
+        vec = current_state.vec_1
+        
+        pic = None
+        for image in self.images:
+          if image.check_collision(vec):
+            pic = image
+
+        current_state.image_index = pic._index
+        pic.to_front()
+
+        for image in self.images:
+          if image != pic:
+            image.to_back()
 
     #check if 1 or 2 finger
     if current_state.has_two_fingers():
-      x, y = current_state.vec_1.x, current_state.vec_1.y
+      rotation = current_state.vec_1.calc_angle(current_state.vec_2)
+      if rotation > self.ROTATION_ERROR_LIMIT:
+        #rotation required
+        pic.rotate(rotation)
+      else:
+        scale = current_state.vec_1.calc_distance(current_state.vec_2)
+        pic.scale(scale)
       #need fixed image from select or move
       #rotate and scale can interchange
       #calc angle -> if angle is less then 2-3 degree -> no rotate
       #calc distance -> if distance greater than x -> scale
       #rotate and scale need at least one finger in the picture
-      pass
+
     else:
-      if current_state.state == ActionState.TOUCH:
-
-      #select
-        #if previous state has hover or none AND current has touch -> select
-        #select image !!!!!!!! can only be checked if there is a previous state!!!!!
-        #forward/backward images
-        #bounding box
-
+      if current_state.state == ActionState.TOUCH and self.state[-2] == ActionState.SELECT:
       #move
-        #if previous state is select, this 
-        pass
-      
+        #if previous state is select
+        current_state.state = ActionState.MOVE
+        vec = current_state.vec_1
+        
+        pic = None
+        for image in self.images:
+          if image.check_collision(vec):
+            pic = image
 
-      if current_state.state == ActionState.HOVER:
+        current_state.image_index = pic._index
+        pic.to_front()
+
+        for image in self.images:
+          if image != pic:
+            image.to_back()
+
+        pic.move(vec)
+      
+      elif current_state.state == ActionState.HOVER:
         self.hover_circle.x = self.DEFAULT_HOVER_POSITION[0]
         self.hover_circle.y =  self.DEFAULT_HOVER_POSITION[1]
-
-
-
-    #unlock image
-    #last image is null
-    #calculate current
-
-    for image in self.images:
-      image.draw()
-    self.hover_circle.draw()
 
     time.sleep(self.FPS)
 
   def on_key_release(self, symbol: int, _) -> None:
     if symbol == key.ESCAPE:
-      self.touch_input.end()
       app.exit()
 
 
