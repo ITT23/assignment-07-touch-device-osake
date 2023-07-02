@@ -4,6 +4,10 @@
 
 located in touch_sensor folder
 
+## Task 2
+
+located in multi_touch_app folder
+
 ## Task 3
 
 located in application_launcher folder
